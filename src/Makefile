@@ -11,6 +11,12 @@ DictionaryBuilder.o: DictionaryBuilder.cpp squeezegene.h
 
 sequenceword: SequenceWord.cpp squeezegene.h
 	g++ -o sequenceword.exe -msse4.2 -floop-optimize sequenceword.cpp
+	
+Compressor.o: Compressor.cpp Compressor.h squeezegene.h
+	g++ -c -O$(optimization) -msse4.2 -floop-optimize Compressor.cpp
+	
+compressor: Compressor.o SequenceWord.o squeezegene.h
+	g++ -o compressor.exe Compressor.o SequenceWord.o
 
 clean:
 	rm -f *.o

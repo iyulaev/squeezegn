@@ -5,6 +5,11 @@
 #define DIFFERENCE_FREE 3
 #define DICTIONARY_SIZE 100000
 
+/* Define how many characters to read from the uncompressed file at a time. Larger reads will place greater 
+demands on system memory but will make compression slightly more efficient due to compression boundaries 
+being more sparse */
+#define COMPRESSION_MAX_READ_SIZE 1000000
+
 //Exception definitions
 #define EXCEPTION_UNKNOWN_ASCII_CHARACTER 900
 #define EXCEPTION_UNKNOWN_CODE_CHARACTER 901
