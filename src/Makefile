@@ -1,5 +1,6 @@
 optimization = 3
 
+# Default builds the dictionary builder
 default: DictionaryBuilder.o SequenceWord.o squeezegene.h
 	g++ -o dictionarybuilder.exe DictionaryBuilder.o SequenceWord.o
 
@@ -8,16 +9,28 @@ SequenceWord.o: SequenceWord.cpp squeezegene.h
 	
 DictionaryBuilder.o: DictionaryBuilder.cpp squeezegene.h
 	g++ -c -O$(optimization) -msse4.2 -floop-optimize -std=gnu++0x DictionaryBuilder.cpp
-
-sequenceword: SequenceWord.cpp squeezegene.h
-	g++ -o sequenceword.exe -msse4.2 -floop-optimize sequenceword.cpp
+	
+Dictionary.o: Dictionary.cpp Dictionary.h squeezegene.h
+	g++ -c -O$(optimization) -msse4.2 -floop-optimize -std=gnu++0x Dictionary.cpp
 	
 Compressor.o: Compressor.cpp Compressor.h squeezegene.h
 	g++ -c -O$(optimization) -msse4.2 -floop-optimize Compressor.cpp
 	
-compressor: Compressor.o SequenceWord.o squeezegene.h
+# Builds the Dictionary test suite
+dictionarytest: Dictionary.o DictionaryTest.cpp SequenceWord.o
+	g++ -c -std=gnu++0x DictionaryTest.cpp
+	g++ -o dictionarytest.exe DictionaryTest.o Dictionary.o SequenceWord.o
+
+# Builds just sequenceword with debugging enabled, so that main() gets compiled
+# in and the test cases get run
+sequenceword: SequenceWord.cpp squeezegene.h
+	g++ -o sequenceword.exe -DDEBUG -msse4.2 -floop-optimize sequenceword.cpp
+	
+#Buildes the compressor tool (not yet working 2012-10-15)
+compressor: Compressor.o SequenceWord.o Dictionary.o squeezegene.h
 	g++ -o compressor.exe Compressor.o SequenceWord.o
 
+#Removes all generated / temporary files
 clean:
 	rm -f *.o
 	rm -f *.exe

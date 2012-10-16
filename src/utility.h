@@ -7,6 +7,8 @@ Written I. Yulaev 2012-10-04
 #ifndef SQUEEZEGENE_UTILITY
 #define SQUEEZEGENE_UTILITY
 
+using namespace std;
+
 /** Compares two pairs having an int as the second member.
 Returns true iff the int for pair one is less than the int in pair two. */
 template<class T>

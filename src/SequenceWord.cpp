@@ -49,6 +49,15 @@ void SequenceWord::pushDatum(uint8_t datum, int idx) {
 	data[idx_word] = old_data | ((datum_big&DATUM_MASK) << idx_pos);
 }
 
+/** Return the datum (2-bit sequence) located at index (idx) provided */
+uint8_t SequenceWord::getDatumAt(int idx) {
+	int idx_word = idx / (sizeof(uint64_t)*8/2);
+	int idx_pos = 2 * (idx % (sizeof(uint64_t)*8/2));
+	
+	uint64_t datumWord = data[idx_word];
+	return((uint8_t)((datumWord >> idx_pos) & 0x3ll));
+}
+
 /** Initializes this SequenceWord.data from the provided character string. We assume input_str has length (at least) 
 STR_LEN. This function is used by SequenceWord constructor */
 void SequenceWord::initSW(const char * input_str) {

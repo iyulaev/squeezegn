@@ -30,7 +30,6 @@ class SequenceWord {
 		
 		uint8_t charToCode(char ascii_char) const;
 		char codeToChar(uint8_t code) const;
-		void pushDatum(uint8_t datum, int idx);
 		void initSW(const char * input_str);
 		
 	public:
@@ -39,6 +38,8 @@ class SequenceWord {
 		SequenceWord(const string input_str);
 		SequenceWord(const SequenceWord& other);
 		const uint64_t* getData(void) const { return(data); }
+		uint8_t getDatumAt(int idx);
+		void pushDatum(uint8_t datum, int idx);
 		
 		int calcDiff(SequenceWord other) const;
 		bool isEqual(SequenceWord other) const;
