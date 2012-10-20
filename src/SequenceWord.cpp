@@ -13,10 +13,9 @@ uint8_t SequenceWord::charToCode(char ascii_char) const {
 		case 'T': return(0x3);
 	}
 	
-	#ifdef DEBUG
-		cout << "Got unknown character " << ascii_char << endl;
-	#endif
+	#ifdef DEBUG_SEQUENCEWORD
 	printf("Got unknown character %c (0x%02x)\n", ascii_char, ascii_char);
+	#endif
 	throw EXCEPTION_UNKNOWN_ASCII_CHARACTER;
 }
 
@@ -29,7 +28,7 @@ char SequenceWord::codeToChar(uint8_t code) const {
 		case 0x3: return('T');
 	}
 	
-	#ifdef DEBUG
+	#ifdef DEBUG_SEQUENCEWORD
 		cout << "Got unknown code " << code << endl;
 	#endif
 	throw EXCEPTION_UNKNOWN_CODE_CHARACTER;
@@ -96,7 +95,7 @@ other.data. There's some optimization to make this function run as quickly as po
 int SequenceWord::calcDiff(SequenceWord other) const {
 	//We assume that unsigned long longs are 64-bits, otherwse the popcount call won't work
 	if(sizeof(unsigned long long) != sizeof(uint64_t)) {
-		#ifdef DEBUG
+		#ifdef DEBUG_SEQUENCEWORD
 			cerr << "Error, ULL != uint64_t!" << endl;
 		#endif
 		throw EXCEPTION_INVALID_ARCHITECTURE;
@@ -192,7 +191,7 @@ char * SequenceWord::outputStr(char* char_buf) const {
 }
 
 
-#ifdef DEBUG
+#ifdef DEBUG_SEQUENCEWORD
 int main() {
 	SequenceWord test("ACGTACGTACGTACGTACGTACGTACGTACGTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 	SequenceWord test2("AAGTACGTACGTACGTCCGTACGTACGTACGTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");

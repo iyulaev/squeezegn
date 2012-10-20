@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
+#include <string.h>
 #include <fstream>
 #include <exception>
 
@@ -31,13 +32,17 @@ vector<SequenceWord>* Dictionary::loadDictionaryFile(string fileName) {
 	while(myfile.good()) {
 		char filebuf[STR_LEN+1];
 		myfile.getline(filebuf, STR_LEN+1);
-		retval->push_back(SequenceWord(filebuf));
 		
+		if(strlen(filebuf) >= STR_LEN) {
+			retval->push_back(SequenceWord(filebuf));
+			
+			#ifdef DICTIONARY_DEBUG_LV1
+			char temp[STR_LEN+1];
+			retval->back().outputStr(temp);
+			printf("Pushed string to dict: %s\n", temp);
+			#endif
+		}
 		#ifdef DICTIONARY_DEBUG_LV1
-		char temp[STR_LEN+1];
-		retval->back().outputStr(temp);
-		printf("Pushed string to dict: %s\n", temp);
-		
 		if(!myfile.good()) {
 			printf("myfile stopped being good after line %d\n", i);
 		}

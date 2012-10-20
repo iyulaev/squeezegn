@@ -1,7 +1,7 @@
 optimization = 3
 
 # Default builds the dictionary builder
-default: DictionaryBuilder.o SequenceWord.o squeezegene.h
+dictionarybuilder: DictionaryBuilder.o SequenceWord.o squeezegene.h
 	g++ -o dictionarybuilder.exe DictionaryBuilder.o SequenceWord.o
 
 SequenceWord.o: SequenceWord.cpp squeezegene.h
@@ -14,7 +14,7 @@ Dictionary.o: Dictionary.cpp Dictionary.h squeezegene.h
 	g++ -c -O$(optimization) -msse4.2 -floop-optimize -std=gnu++0x Dictionary.cpp
 	
 Compressor.o: Compressor.cpp Compressor.h squeezegene.h
-	g++ -c -O$(optimization) -msse4.2 -floop-optimize Compressor.cpp
+	g++ -c -O$(optimization) -msse4.2 -floop-optimize -std=gnu++0x Compressor.cpp
 	
 # Builds the Dictionary test suite
 dictionarytest: Dictionary.o DictionaryTest.cpp SequenceWord.o
@@ -28,7 +28,7 @@ sequenceword: SequenceWord.cpp squeezegene.h
 	
 #Buildes the compressor tool (not yet working 2012-10-15)
 compressor: Compressor.o SequenceWord.o Dictionary.o squeezegene.h
-	g++ -o compressor.exe Compressor.o SequenceWord.o
+	g++ -o compressor.exe Compressor.o Dictionary.o SequenceWord.o
 
 #Removes all generated / temporary files
 clean:

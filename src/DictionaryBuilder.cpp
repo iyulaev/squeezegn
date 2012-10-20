@@ -66,7 +66,7 @@ vector<SequenceWord>* DictionaryBuilder::loadFile(string fileName) {
 	myfile.close();	
 	
 	#ifdef REMOVE_NS
-	int file_strings = file_buf_ptr_remove_ns - file_buffer - STR_LEN;
+	int file_strings = file_buf_ptr_remove_ns - file_buffer - STR_LEN + 1;
 	#else
 	int file_strings = (file_bytes-STR_LEN);
 	#endif
@@ -174,7 +174,7 @@ int main(int argc, char ** argv)
 		
 		int i = 0;
 		auto it_two = it;
-		while((i++) < 50 && (--it_two) > sequenceWords->begin()) {
+		while((i++) < 50 && (--it_two) >= sequenceWords->begin()) {
 			diff+=it->calcDiff(*it_two);
 		}
 		
@@ -198,7 +198,7 @@ int main(int argc, char ** argv)
 	int j = 0;
 	while(diff_list[j].second == 0) { j++; }
 	
-	for(int i = j; i < j+10; i++) {
+	for(int i = j; i < j+10 && i < diff_list.size(); i++) {
 		char msgbuf[STR_LEN+1];
 		diff_list[i].first.outputStr(msgbuf);
 		
@@ -209,14 +209,14 @@ int main(int argc, char ** argv)
 	
 	ofstream dict_file;
 	dict_file.open(argv[2]);
-	if(dict_file.good()) {
+	if(!dict_file.good()) {
 		cerr << "Couldn't open dictionary file for writing." << endl;
 		throw EXCEPTION_FILE_IO;
 	}
 	auto it = diff_list.begin();
-	for(int i = 0; (i < DICTIONARY_SIZE && i < diff_list.size()); i++) {
+	for(int i = 0; i < DICTIONARY_SIZE && it < diff_list.end(); i++) {
 		char msgbuf[STR_LEN+1];
-		it->first.outputStr(msgbuf);
+		(it++)->first.outputStr(msgbuf);
 		dict_file << msgbuf << endl;
 	}
 	dict_file.close();

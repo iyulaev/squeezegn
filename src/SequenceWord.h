@@ -14,8 +14,9 @@ Written I. Yulaev 2012-10-03
 #include <string>
 #include <stdint.h>
 
-//#define DEBUG
-#ifdef DEBUG
+//Enable debugging output
+//#define DEBUG_SEQUENCEWORD
+#ifdef DEBUG_SEQUENCEWORD
 #include <iostream>
 #include <stdio.h>
 #endif
