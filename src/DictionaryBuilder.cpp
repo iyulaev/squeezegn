@@ -1,3 +1,9 @@
+/** DictionaryBuilder is used to build a dictionary for the Compressor and Extractor tools, 
+part of the squeezegene DNA sequence compression utility 
+
+TODO: modify the output so that we output binary, 2 bits per base Dictionary (1/4 the size)
+*/
+
 #include <iostream>
 #include <stdio.h>
 #include <string>

@@ -11,17 +11,11 @@
 
 using namespace std;
 
-/** Creates a new dictionary from dict file fileName, assumes that the dictionary has size n_dict_size
-*/
 Dictionary::Dictionary(string fileName, int n_dict_size) {
 	dictionary_size = n_dict_size;
 	dictionaryList = loadDictionaryFile(fileName);
 }
 
-/** Loads the given dictionaryfile into a vector of SequenceWords
-
-Return: pointer to a newly-allocated vector of SequenceWords, that represents the loaded dictionary
-*/
 vector<SequenceWord>* Dictionary::loadDictionaryFile(string fileName) {
 	ifstream myfile;
 	vector<SequenceWord>* retval = new vector<SequenceWord>();
@@ -55,11 +49,7 @@ vector<SequenceWord>* Dictionary::loadDictionaryFile(string fileName) {
 	return(retval);
 }
 
-/** Returns the difference set between the provided SequenceWord and the dictionary SequenceWord at target_idx
-The return value is the difference list (expressed as a vector of bytes) where  if the byte starts with 1'b0, then the 
-next 15 bits represent the number of sequence symbols we should skip, and if the byte starts with 2'b10, then the
-next one byte represents a single symbol replacement and 2'b11 represents three symbol replacements.
-*/
+
 vector<uint8_t>* Dictionary::calcStringDiffs(SequenceWord query, int target_idx) {
 	SequenceWord target = (*dictionaryList)[target_idx];
 	
@@ -86,6 +76,7 @@ vector<uint8_t>* Dictionary::calcStringDiffs(SequenceWord query, int target_idx)
 				target.getDatumAt(i));
 			#endif
 		
+			//Skip letter (16 bit sequence) starts with 1'b0
 			if(skipped_letters > 0) {
 				uint16_t skipword = skipped_letters & 0x7F;
 				retval->push_back((uint8_t)((skipword >> 8) & 0xFF));
@@ -93,10 +84,12 @@ vector<uint8_t>* Dictionary::calcStringDiffs(SequenceWord query, int target_idx)
 				skipped_letters = 0;
 			}
 		
+			//Single letter substitution starts with 2'b10
 			if(i > (STR_LEN - 3)) {
 				uint8_t diff = 0x80 | (query.getDatumAt(i));
 				retval->push_back(diff);
 				i++;
+			//Multi-letter substitution starts with 2'b11
 			} else {
 				uint8_t diff = 0xC0 | ((query.getDatumAt(i)<<4)|(query.getDatumAt(i+1)<<2)|(query.getDatumAt(i+2)));
 				retval->push_back(diff);
@@ -121,9 +114,6 @@ vector<uint8_t>* Dictionary::calcStringDiffs(SequenceWord query, int target_idx)
 }
 
 //#define DEBUG_DICTIONARY_FEM
-/** Try to find the index of an exact match between the provided SequenceWord and the 
-currently loaded dictionary. If a match is found, a dictionary index is returned, otherwise we 
-return (-1). */
 int Dictionary::findExactMatch(SequenceWord input) {
 	auto it_first = dictionaryList->begin();
 	auto it_last = dictionaryList->end();
@@ -146,8 +136,7 @@ int Dictionary::findExactMatch(SequenceWord input) {
 	}
 }
 
-/** Find the nearest match from the nearest DICTIONARY_NEAREST_SEARCH_RADIUS words, 
-centered around the dictionary's lower_bound() of the given SequenceWord input. */
+
 int Dictionary::findFromNearest(SequenceWord input) {
 	auto it_first = dictionaryList->begin();
 	auto it_last = dictionaryList->end();
@@ -179,8 +168,7 @@ int Dictionary::findFromNearest(SequenceWord input) {
 	return(min_pos);
 }
 
-/** Try to find a match for input within the dictionary, changing at most one symbol in input. This gives (3*STR_LEN) possible
-matches to check against in the dictionary */
+
 int Dictionary::findNearMatch(SequenceWord input) {
 	//change each character in input by 1
 	for(int i = 0; i < STR_LEN; i++) {
@@ -197,10 +185,3 @@ int Dictionary::findNearMatch(SequenceWord input) {
 	
 	return(-1);
 }
-
-
-
-
-
-
-
