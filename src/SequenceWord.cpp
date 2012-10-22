@@ -60,7 +60,7 @@ uint8_t SequenceWord::getDatumAt(int idx) {
 /** Initializes this SequenceWord.data from the provided character string. We assume input_str has length (at least) 
 STR_LEN. This function is used by SequenceWord constructor */
 void SequenceWord::initSW(const char * input_str) {
-	for(int i = 0; i < STR_LEN * 2 / sizeof(uint64_t); i++) {
+	for(int i = 0; i < STR_LEN / 4 / sizeof(uint64_t); i++) {
 		data[i] = 0x0;
 	}
 	
@@ -122,6 +122,40 @@ int SequenceWord::calcDiff(SequenceWord other) const {
 	}
 	
 	return(retval);
+}
+
+/** Returns the index of the first datum that isn't the same between this SW and other 
+If there's no difference, return -1
+
+TODO: make this more efficient (hand-manipulation of bits and the like)
+*/
+int SequenceWord::firstDatumNotSame(const SequenceWord & other) const {
+	const uint64_t* other_data = other.getData();
+	
+	for(int i = 0; i < (STR_LEN/4)/sizeof(uint64_t); i++) {
+		if(data[i] != other_data[i]) {
+			uint8_t* this_data_bytes = (uint8_t*) data;
+			uint8_t* other_data_bytes = (uint8_t*) other_data;
+			
+			for(int j = 0; j < sizeof(uint64_t)/sizeof(uint8_t); j++) {
+				if(this_data_bytes[j] != other_data_bytes[j]) {
+					uint8_t this_byte = this_data_bytes[j];
+					uint8_t other_byte = other_data_bytes[j];
+					
+					int bit_broken = -1;
+					
+					if((this_byte&0x03) != (other_byte & 0x03)) { bit_broken = 0; }
+					else if((this_byte&0x0C) != (other_byte & 0x0C)) { bit_broken = 1; }
+					else if((this_byte&0x30) != (other_byte & 0x30)) { bit_broken = 2; }
+					else if((this_byte&0xC0) != (other_byte & 0xC0)) { bit_broken = 3; }
+					
+					return(bit_broken + j*(8/2) + i*(sizeof(uint64_t) * (8/2)));
+				}
+			}
+		}
+	}
+	
+	return(-1);
 }
 
 /** Compares two SequenceWords by using bit-wise XOR of data member variables. Returns true if there

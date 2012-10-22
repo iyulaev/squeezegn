@@ -27,7 +27,7 @@ using namespace std;
 
 class SequenceWord {
 	private:
-		uint64_t data [STR_LEN * 2 / sizeof(uint64_t)];
+		uint64_t data [STR_LEN / 4 / sizeof(uint64_t)];
 		
 		uint8_t charToCode(char ascii_char) const;
 		char codeToChar(uint8_t code) const;
@@ -43,6 +43,7 @@ class SequenceWord {
 		void pushDatum(uint8_t datum, int idx);
 		
 		int calcDiff(SequenceWord other) const;
+		int firstDatumNotSame(const SequenceWord& other) const;
 		bool isEqual(SequenceWord other) const;
 		bool operator<(SequenceWord other) const;
 		bool operator>(SequenceWord other) const;

@@ -28,6 +28,9 @@ class Dictionary {
 	/** Creates a new dictionary from dict file fileName, assumes that the dictionary has size n_dict_size */
 	Dictionary(string fileName, int n_dict_size);
 	
+	/** Return a copy of the sequenceword at position idx */
+	SequenceWord* getWordAt(int idx);
+	
 	/** Returns the difference set between the provided SequenceWord and the dictionary SequenceWord at target_idx
 	The return value is the difference list (expressed as a vector of bytes) where  if the byte starts with 1'b0, then the 
 	next 15 bits represent the number of sequence symbols we should skip, and if the byte starts with 2'b10, then the

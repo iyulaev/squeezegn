@@ -54,6 +54,9 @@ vector<SequenceWord>* Dictionary::loadDictionaryFile(string fileName) {
 	return(retval);
 }
 
+SequenceWord* Dictionary::getWordAt(int idx) {
+	return(new SequenceWord(dictionaryList->at(idx)));
+}
 
 vector<uint8_t>* Dictionary::calcStringDiffs(SequenceWord query, int target_idx) {
 	SequenceWord target = (*dictionaryList)[target_idx];

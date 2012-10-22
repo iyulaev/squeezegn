@@ -22,4 +22,15 @@ fi
 
 rm testdata_2_dict_test.txt
 
+# TEST #3
+../../src/DictionaryBuilder.exe testdata_3_input.txt testdata_3_dict_test.txt 1 > /dev/null
+
+if diff -q testdata_3_dict.txt testdata_3_dict_test.txt > /dev/null; then
+    echo "DictionaryBuilder Test #3 PASS"
+else
+    echo "DictionaryBuilder Test #3 FAIL"
+fi
+
+rm testdata_3_dict_test.txt
+
 echo "DictionaryBuilder Test DONE"

@@ -81,6 +81,12 @@ inline void Compressor::pushSingleCharacter(char c) {
 	else if(c == 'T') { diffList->push_back(0x83); }
 }
 
+inline void Compressor::skipNChars(int skip_positions) {
+	uint16_t skips = (uint16_t) skip_positions;
+	diffList->push_back(((uint8_t*)&skips)[1]);
+	diffList->push_back(((uint8_t*)&skips)[0]);
+}
+
 void Compressor::replaceNs(vector<pair <int,int> >* nPositions, string* fileString, int file_idx) {
 	size_t next_N;
 	int skipped_ns = 0;
@@ -104,19 +110,47 @@ void Compressor::replaceNs(vector<pair <int,int> >* nPositions, string* fileStri
 	} while(next_N != string::npos);
 }
 
+#define ENABLE_ONESUB_MATCH
 void Compressor::compressFileString(Dictionary & dict, string & fileString, int file_idx) {
 	int str_idx = 0;
 	while(str_idx < fileString.size()) {
 		if(fileString.size() - str_idx > STR_LEN) {
-			int match_idx = dict.findExactMatch(SequenceWord(fileString.substr(str_idx, str_idx + STR_LEN)));
+			int exact_match_idx = dict.findExactMatch(SequenceWord(fileString.substr(str_idx, str_idx + STR_LEN)));
 			
-			if(match_idx >= 0) { 
-				stringPositions->push_back( make_pair(file_idx+str_idx, match_idx) ); 
+			if(exact_match_idx >= 0) { 
+				stringPositions->push_back( make_pair(file_idx+str_idx, exact_match_idx) ); 
+				skipNChars(STR_LEN);
 				str_idx += STR_LEN;
 			}
+			
+			#ifdef ENABLE_ONESUB_MATCH
 			else {
+				int near_match_idx = dict.findNearMatch(SequenceWord(fileString.substr(str_idx, str_idx + STR_LEN)));
+				
+				if(near_match_idx >= 0) { 
+					stringPositions->push_back( make_pair(file_idx+str_idx, near_match_idx) ); 
+					
+					SequenceWord queryWord(fileString.substr(str_idx, str_idx + STR_LEN));
+					SequenceWord* targetWord = dict.getWordAt(near_match_idx);
+					int mismatch_datum=queryWord.firstDatumNotSame(*targetWord);
+					delete targetWord;
+					
+					skipNChars(mismatch_datum);
+					pushSingleCharacter(fileString.at(str_idx + mismatch_datum));
+					skipNChars(STR_LEN - mismatch_datum - 1);
+					
+					str_idx += STR_LEN;
+				}
+				
+				else { 
+					pushSingleCharacter(fileString.at(str_idx++));
+				}
+			}
+			#else
+			else { 
 				pushSingleCharacter(fileString.at(str_idx++));
 			}
+			#endif
 		}
 		
 		else {	
@@ -180,6 +214,10 @@ int main ( int argc, char ** argv) {
 	}
 	
 	file_input.close();
+	
+	#ifdef DEBUG_COMPRESSOR
+	cerr << "Done writing files" << endl;
+	#endif
 	
 	return(0);
 }

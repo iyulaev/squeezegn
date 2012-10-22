@@ -22,6 +22,7 @@ class Compressor {
 		//Format is:
 		//starting with 2'b10 - single-base substitution
 		//Starting with 2'b11 - three-base substitutions (three bases are packed into the lower-most 6 bits)
+		//starting with 1'b0 - next 15 bits are a skip
 		vector<uint8_t>* diffList;
 		
 		/** Initialize data structures for a single compression run */
@@ -33,6 +34,8 @@ class Compressor {
 		
 		/** Push a single character to diffList */
 		inline void pushSingleCharacter(char c);
+		/** Push a single skip entry into diffList */
+		inline void skipNChars(int skip_positions);
 		
 		/** Compress the diff list:
 			Any three single-bit substitutions turn into a single three-bit substitution
