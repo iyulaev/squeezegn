@@ -6,12 +6,10 @@
 
 if diff -q testdata_1_output.hex_000 testdata_1_output_golden.hex > /dev/null; then
     echo "DictionaryBuilder Test #1 PASS"
+	rm testdata_1_output.hex_000
 else
     echo "DictionaryBuilder Test #1 FAIL"
 fi
-
-rm testdata_1_output.hex_000
-
 
 
 
@@ -21,12 +19,10 @@ rm testdata_1_output.hex_000
 
 if diff -q testdata_2_output.hex_000 testdata_2_output_golden.hex > /dev/null; then
     echo "DictionaryBuilder Test #2 PASS"
+	rm testdata_2_output.hex_000
 else
     echo "DictionaryBuilder Test #2 FAIL"
 fi
-
-rm testdata_2_output.hex_000
-
 
 
 
@@ -37,10 +33,24 @@ rm testdata_2_output.hex_000
 
 if diff -q testdata_3_output.hex_000 testdata_3_output_golden.hex > /dev/null; then
     echo "DictionaryBuilder Test #3 PASS"
+	rm testdata_3_output.hex_000
 else
     echo "DictionaryBuilder Test #3 FAIL"
 fi
 
-rm testdata_3_output.hex_000
+
+
+
+
+# TEST #4
+# Tests that near matches should work
+../../src/compressor.exe testdata_4_dict.txt testdata_4_input.txt testdata_4_output.hex > /dev/null
+
+if diff -q testdata_4_output.hex_000 testdata_4_output_golden.hex > /dev/null; then
+    echo "DictionaryBuilder Test #4 PASS"
+	rm testdata_4_output.hex_000
+else
+    echo "DictionaryBuilder Test #4 FAIL"
+fi
 
 echo "DictionaryBuilder Test DONE"

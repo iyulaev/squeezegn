@@ -30,6 +30,16 @@ inline std::size_t sequenceWordHash(const SequenceWord & sw) {
 	return(retval);
 }
 
+/** Return the character (ASCII) corresponding to a code datum */
+inline char codeToChar(uint8_t code) {
+	switch(code & 0x3) {
+		case 0x0: return('A');
+		case 0x1: return('C');
+		case 0x2: return('G');
+		case 0x3: return('T');
+	}
+}
+
 //functor for sequenceWordHash
 typedef struct
 {

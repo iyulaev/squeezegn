@@ -30,7 +30,6 @@ class SequenceWord {
 		uint64_t data [STR_LEN / 4 / sizeof(uint64_t)];
 		
 		uint8_t charToCode(char ascii_char) const;
-		char codeToChar(uint8_t code) const;
 		void initSW(const char * input_str);
 		
 	public:

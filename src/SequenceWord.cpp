@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "sequenceword.h"
+#include "utility.h"
 
 /** Private function; returns the 2-bit code corresponding to the ACGT character provided */
 uint8_t SequenceWord::charToCode(char ascii_char) const {
@@ -20,7 +21,7 @@ uint8_t SequenceWord::charToCode(char ascii_char) const {
 }
 
 /** Opposite of charToCode() returns ACGT character for the 2-bit code provided */
-char SequenceWord::codeToChar(uint8_t code) const {
+/*char SequenceWord::codeToChar(uint8_t code) const {
 	switch(code) {
 		case 0x0: return('A');
 		case 0x1: return('C');
@@ -32,7 +33,7 @@ char SequenceWord::codeToChar(uint8_t code) const {
 		cout << "Got unknown code " << code << endl;
 	#endif
 	throw EXCEPTION_UNKNOWN_CODE_CHARACTER;
-}
+}*/
 
 /** Puts a given code datum (2-bit character) into position idx within this SequenceWord's
 data member variable. Used by the constructor to fill this SequenceWord. */

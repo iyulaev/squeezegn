@@ -181,9 +181,13 @@ int Dictionary::findNearMatch(SequenceWord input) {
 	//change each character in input by 1
 	for(int i = 0; i < STR_LEN; i++) {
 		//there are thre epossible options for each character
-		for(int j = 0; j < 3; j++) {
+		for(int j = 1; j < 4; j++) {
 			SequenceWord trial(input);
-			trial.pushDatum(trial.getDatumAt(i) + j % 4, i);
+			trial.pushDatum((trial.getDatumAt(i) + j) % 4, i);
+			
+			// char msgbuf[256];
+			// trial.outputStr(msgbuf);
+			// cout << "Going to try to find exact match for " << msgbuf << endl;
 			
 			int position = findExactMatch(trial);
 			

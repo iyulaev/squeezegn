@@ -26,9 +26,16 @@ dictionarytest: Dictionary.o DictionaryTest.cpp SequenceWord.o
 sequenceword: SequenceWord.cpp squeezegene.h utility.h
 	g++ -o sequenceword.exe -DDEBUG_SEQUENCEWORD -msse4.2 -floop-optimize SequenceWord.cpp
 	
-#Buildes the compressor tool (not yet working 2012-10-15)
+#Buildes the compressor tool
 compressor: Compressor.o SequenceWord.o Dictionary.o squeezegene.h
 	g++ -o compressor.exe Compressor.o Dictionary.o SequenceWord.o
+	
+Decompressor.o: Decompressor.cpp Decompressor.h squeezegene.h utility.h
+	g++ -c -O$(optimization) -msse4.2 -floop-optimize -std=gnu++0x Decompressor.cpp
+	
+#Buildes the decompressor tool (not yet working 2012-10-15)
+decompressor: SequenceWord.o Dictionary.o squeezegene.h Decompressor.o
+	g++ -o compressor.exe Decompressor.o Dictionary.o SequenceWord.o
 
 #Removes all generated / temporary files
 clean:

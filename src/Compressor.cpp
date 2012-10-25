@@ -27,7 +27,7 @@ void Compressor::destroyDataStructures() {
 	delete diffList;
 }
 
-void Compressor::flushDataStructures(string & ofile_name) {
+void Compressor::flushDataStructures(string & ofile_name, int chars_compressed) {
 	ofstream outfile;
 	outfile.open(ofile_name.c_str(), ios::out | ios::binary);
 	
@@ -35,6 +35,9 @@ void Compressor::flushDataStructures(string & ofile_name) {
 		cerr << "Compressor couldn't open output file " << ofile_name << " for writing." << endl;
 		throw EXCEPTION_FILE_IO;
 	}
+	
+	//Write out the uncompressed file length
+	outfile.write((const char*) &chars_compressed, sizeof(int));
 	
 	//Write out how many EXACT strings will be output
 	int exact_str_count = stringPositions->size();
@@ -59,13 +62,13 @@ void Compressor::flushDataStructures(string & ofile_name) {
 	outfile.close();
 }
 
-void Compressor::clearOutBuffer(string & ofile_name, int ofile_count) {
+void Compressor::clearOutBuffer(string & ofile_name, int ofile_count, int chars_compressed) {
 	//flush internal data structures to file, re-initialize them
 	char file_suffix_buf [5];
 	sprintf(file_suffix_buf, "_%03d", ofile_count); //TODO: should be flexible on the number of allowable chunks
 	string full_ofile_name = ofile_name + string(file_suffix_buf);
 	
-	flushDataStructures(full_ofile_name);
+	flushDataStructures(full_ofile_name, chars_compressed);
 	destroyDataStructures();
 	initDataStructures();
 }
@@ -111,14 +114,14 @@ void Compressor::replaceNs(vector<pair <int,int> >* nPositions, string* fileStri
 }
 
 #define ENABLE_ONESUB_MATCH
-void Compressor::compressFileString(Dictionary & dict, string & fileString, int file_idx) {
+int Compressor::compressFileString(Dictionary & dict, string & fileString) {
 	int str_idx = 0;
 	while(str_idx < fileString.size()) {
 		if(fileString.size() - str_idx > STR_LEN) {
 			int exact_match_idx = dict.findExactMatch(SequenceWord(fileString.substr(str_idx, str_idx + STR_LEN)));
 			
 			if(exact_match_idx >= 0) { 
-				stringPositions->push_back( make_pair(file_idx+str_idx, exact_match_idx) ); 
+				stringPositions->push_back( make_pair(str_idx, exact_match_idx) ); 
 				skipNChars(STR_LEN);
 				str_idx += STR_LEN;
 			}
@@ -128,7 +131,7 @@ void Compressor::compressFileString(Dictionary & dict, string & fileString, int 
 				int near_match_idx = dict.findNearMatch(SequenceWord(fileString.substr(str_idx, str_idx + STR_LEN)));
 				
 				if(near_match_idx >= 0) { 
-					stringPositions->push_back( make_pair(file_idx+str_idx, near_match_idx) ); 
+					stringPositions->push_back( make_pair(str_idx, near_match_idx) ); 
 					
 					SequenceWord queryWord(fileString.substr(str_idx, str_idx + STR_LEN));
 					SequenceWord* targetWord = dict.getWordAt(near_match_idx);
@@ -157,6 +160,8 @@ void Compressor::compressFileString(Dictionary & dict, string & fileString, int 
 			pushSingleCharacter(fileString.at(str_idx++));
 		}
 	}
+	
+	return(str_idx);
 }
 
 int main ( int argc, char ** argv) {
@@ -208,9 +213,9 @@ int main ( int argc, char ** argv) {
 		
 		//For now let's not worry about replacing Ns
 		//file_idx = engine.replaceNs(&nPositions, &fileString, 0);
-		engine.compressFileString(dict, fileString, file_idx);
-		engine.clearOutBuffer(ofile_name, ofile_count++);
-		file_idx += fileString.size();
+		int chars_compressed = engine.compressFileString(dict, fileString);
+		engine.clearOutBuffer(ofile_name, ofile_count++, chars_compressed);
+		file_idx += chars_compressed;
 	}
 	
 	file_input.close();
