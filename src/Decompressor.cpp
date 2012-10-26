@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <iostream>
 #include <stdint.h>
 #include <fstream>
@@ -43,16 +44,17 @@ char* Decompressor::decompress_file(const string & compressed_file, Dictionary &
 		uint8_t byte_one;
 		file_input.read((char*)&byte_one, sizeof(uint8_t));
 		
+		//printf("Read in char 0x%02x\n", byte_one);
+		
 		//Begins with 2'b11 -> three-letter insert
-		if((byte_one & 0xC) == 0xC) {
+		if((byte_one & 0xC0) == 0xC0) {
 			for(int i = 0; i < 3; i++) {
-				*insertion_ptr = codeToChar(byte_one);
+				*insertion_ptr = codeToChar(byte_one>>(4-(2*i)));
 				insertion_ptr++;
-				byte_one >>= 2;
 			}
 		}
 		//Begins with 2'b10 -> single-letter insert
-		else if((byte_one & 0xC) == 0x8) {
+		else if((byte_one & 0xC0) == 0x80) {
 			*insertion_ptr = codeToChar(byte_one);
 			insertion_ptr++;
 		}
@@ -71,12 +73,20 @@ char* Decompressor::decompress_file(const string & compressed_file, Dictionary &
 }
 
 int main(int argc, char ** argv) {
-	if(argc != 4) {
+	if(argc != 3 && argc != 4) {
 		cout << "Invalid number of command line arguments!" << endl;
+		cout << "Should be:" << endl;
+		cout << "(1) Dictionary file" << endl;
+		cout << "(2) Input file" << endl;
+		cout << "(3) Dictionary size (optional)" << endl;
 	}
 	
 	string dictFilename(argv[1]);
-	int dict_size = atoi(argv[3]);
+	
+	int dict_size;
+	if(argc==4) { dict_size = atoi(argv[3]); }
+	else { dict_size = DICTIONARY_SIZE; }
+	
 	Dictionary dict(dictFilename, dict_size);
 	Decompressor engine;
 	

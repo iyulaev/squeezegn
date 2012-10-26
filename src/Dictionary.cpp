@@ -86,7 +86,7 @@ vector<uint8_t>* Dictionary::calcStringDiffs(SequenceWord query, int target_idx)
 		
 			//Skip letter (16 bit sequence) starts with 1'b0
 			if(skipped_letters > 0) {
-				uint16_t skipword = skipped_letters & 0x7F;
+				uint16_t skipword = skipped_letters & 0x7FFF;
 				retval->push_back((uint8_t)((skipword >> 8) & 0xFF));
 				retval->push_back((uint8_t) (skipword & 0xFF));
 				skipped_letters = 0;
@@ -112,7 +112,7 @@ vector<uint8_t>* Dictionary::calcStringDiffs(SequenceWord query, int target_idx)
 	}
 	
 	if(skipped_letters > 0) {
-		uint16_t skipword = skipped_letters & 0x7F;
+		uint16_t skipword = skipped_letters & 0x7FFF;
 		retval->push_back((uint8_t)((skipword >> 8) & 0xFF));
 		retval->push_back((uint8_t) (skipword & 0xFF));
 		skipped_letters = 0;

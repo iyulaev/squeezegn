@@ -114,11 +114,13 @@ void Compressor::replaceNs(vector<pair <int,int> >* nPositions, string* fileStri
 }
 
 #define ENABLE_ONESUB_MATCH
+#define ENABLE_NEARRADIUS_MATCH
 int Compressor::compressFileString(Dictionary & dict, string & fileString) {
 	int str_idx = 0;
 	while(str_idx < fileString.size()) {
+		//Try to find exact match
 		if(fileString.size() - str_idx > STR_LEN) {
-			int exact_match_idx = dict.findExactMatch(SequenceWord(fileString.substr(str_idx, str_idx + STR_LEN)));
+			int exact_match_idx = dict.findExactMatch(SequenceWord(fileString.substr(str_idx, STR_LEN)));
 			
 			if(exact_match_idx >= 0) { 
 				stringPositions->push_back( make_pair(str_idx, exact_match_idx) ); 
@@ -126,6 +128,7 @@ int Compressor::compressFileString(Dictionary & dict, string & fileString) {
 				str_idx += STR_LEN;
 			}
 			
+			//Try to find match for single-character substitution
 			#ifdef ENABLE_ONESUB_MATCH
 			else {
 				int near_match_idx = dict.findNearMatch(SequenceWord(fileString.substr(str_idx, str_idx + STR_LEN)));
@@ -133,7 +136,7 @@ int Compressor::compressFileString(Dictionary & dict, string & fileString) {
 				if(near_match_idx >= 0) { 
 					stringPositions->push_back( make_pair(str_idx, near_match_idx) ); 
 					
-					SequenceWord queryWord(fileString.substr(str_idx, str_idx + STR_LEN));
+					SequenceWord queryWord(fileString.substr(str_idx, STR_LEN));
 					SequenceWord* targetWord = dict.getWordAt(near_match_idx);
 					int mismatch_datum=queryWord.firstDatumNotSame(*targetWord);
 					delete targetWord;
@@ -145,9 +148,55 @@ int Compressor::compressFileString(Dictionary & dict, string & fileString) {
 					str_idx += STR_LEN;
 				}
 				
+				//Try to find match from nearest "search radius"
+				#define MAX_DIFF_COUNT 3
+				#ifdef ENABLE_NEARRADIUS_MATCH
+				else { 
+					SequenceWord queryWord(fileString.substr(str_idx, STR_LEN));
+					
+					int near_match_idx = dict.findFromNearest(queryWord);
+					int diffs_w_near_match = -1;
+					if(near_match_idx >= 0) {
+						SequenceWord* targetWord = dict.getWordAt(near_match_idx);
+						diffs_w_near_match = queryWord.calcDiff(*targetWord);
+					}
+					
+					if(diffs_w_near_match >= 0 && diffs_w_near_match <= MAX_DIFF_COUNT) {
+						
+						//make compressorcout << "Compressor doing nearest radius insert." << endl;
+						
+						stringPositions->push_back( make_pair(str_idx, near_match_idx) );
+
+						char msgbuf[256];
+						SequenceWord* targetWord = dict.getWordAt(near_match_idx);
+						targetWord->outputStr(msgbuf);
+						// printf("Diffing strings %s and ", msgbuf);
+						// cout << fileString.substr(str_idx, STR_LEN) << endl;
+						vector<uint8_t>* dictDiffList = dict.calcStringDiffs(
+							queryWord, 
+							near_match_idx);
+							
+						for(auto it = dictDiffList->begin(); it < dictDiffList->end(); it++) {
+							diffList->push_back(*it);
+							//printf("Pushing diff list item 0x%02x\n", *it);
+						}
+						
+						delete dictDiffList;
+						str_idx += STR_LEN;
+					}
+					
+					else { 
+						// printf("Pushing single character %c to output pos %d\n",
+							// fileString.at(str_idx),
+							// str_idx);
+						pushSingleCharacter(fileString.at(str_idx++));
+					}
+				}
+				#else
 				else { 
 					pushSingleCharacter(fileString.at(str_idx++));
 				}
+				#endif
 			}
 			#else
 			else { 
@@ -156,7 +205,11 @@ int Compressor::compressFileString(Dictionary & dict, string & fileString) {
 			#endif
 		}
 		
+		//If we don't have enough characters left in the string we have no choice but to push them to the end
 		else {	
+			// printf("Pushing (OOC) single character %c to output pos %d\n",
+							// fileString.at(str_idx),
+							// str_idx);
 			pushSingleCharacter(fileString.at(str_idx++));
 		}
 	}

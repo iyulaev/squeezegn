@@ -35,7 +35,7 @@ Decompressor.o: Decompressor.cpp Decompressor.h squeezegene.h utility.h
 	
 #Buildes the decompressor tool (not yet working 2012-10-15)
 decompressor: SequenceWord.o Dictionary.o squeezegene.h Decompressor.o
-	g++ -o compressor.exe Decompressor.o Dictionary.o SequenceWord.o
+	g++ -o decompressor.exe Decompressor.o Dictionary.o SequenceWord.o
 
 #Removes all generated / temporary files
 clean:
