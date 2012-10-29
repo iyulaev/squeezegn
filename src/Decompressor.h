@@ -15,7 +15,7 @@ class Decompressor{
 
 	public:
 	Decompressor();
-	char* decompress_file(const string & compressed_file, Dictionary & dict);
+	char* decompress_file(const string & compressed_file, Dictionary & dict) const;
 };
 
 #endif

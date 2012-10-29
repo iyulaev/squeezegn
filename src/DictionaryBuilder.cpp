@@ -32,17 +32,23 @@ class DictionaryBuilder {
 };
 
 #define REMOVE_NS
-#define DICTIONARYBUILDER_DEBUG
+//#define DICTIONARYBUILDER_DEBUG
 /** Loads the given file (fileName) into memory, and then generates a vector of SequenceWords, one starting at 
 every character of the file. 
 */
 vector<SequenceWord>* DictionaryBuilder::loadFile(string fileName) {
 	//Determine the length of the file
 	struct stat filestatus;
-	stat( fileName.c_str(), &filestatus );
+	int stat_retval = stat( fileName.c_str(), &filestatus );
 	unsigned int file_bytes = filestatus.st_size;
 	
-	if(file_bytes < STR_LEN) throw EXCEPTION_FILE_IO;
+	if(file_bytes < STR_LEN) { throw EXCEPTION_FILE_IO; }
+	if(stat_retval != 0) { 
+		cerr << "Couldn't stat input file " << fileName << endl;
+		throw EXCEPTION_FILE_IO; 
+	}
+	
+	cerr << "file_bytes = " << file_bytes << endl;
 	
 	char * file_buffer = (char*) malloc(file_bytes * sizeof(char));
 	if(file_buffer == NULL) throw EXCEPTION_FILE_IO;
@@ -90,12 +96,12 @@ int main(int argc, char ** argv)
 	if(argc != 3 && argc != 4) {
 		cout << "dictionarybuilder takes two or three arguments, the file name for short read file \
 			to read from, and the dictionary file that we are to generate." << endl;
-		cout << "optionally a fourth argument may be given, indicating the dictionary size to use." \
+		cout << "optionally a third argument may be given, indicating the dictionary size to use." \
 			<< endl;
 		return -1;
 	}
 	
-	int dict_size = (argc==4)?atoi(argv[3]):DICTIONARY_SIZE;
+	int dict_size = (argc==4) ? atoi(argv[3]) : DICTIONARY_SIZE;
 	
 	//http://gcc.gnu.org/onlinedocs/libstdc++/manual/termination.html
 	std::set_terminate(__gnu_cxx::__verbose_terminate_handler);
@@ -104,16 +110,21 @@ int main(int argc, char ** argv)
 	DictionaryBuilder engine;
 	vector<SequenceWord>* sequenceWords;
 	try {
+		#ifdef DICTIONARYBUILDER_DEBUG
 		cout << "LOADING SRR FILE FROM DISK, TO GENERATE DICTIONARY." << endl;
+		#endif
+		
 		sequenceWords = engine.loadFile(argv[1]);
 	} catch(int e) {
 		cerr << "Threw exception " << e << endl;
 		return e;
 	}
 	
+	#ifdef DICTIONARYBUILDER_DEBUG
 	cerr << "Finished reading SRR file." << endl;
+	#endif
 	
-	//Debugging
+	//Debugging output
 	#ifdef DICTIONARYBUILDER_DEBUG
 	int i = 0;
 	for(auto it = sequenceWords->begin(); it < sequenceWords->end(); it++) {
@@ -130,9 +141,13 @@ int main(int argc, char ** argv)
 	#endif
 	
 	//Sort the list of SequenceWords
+	#ifdef DICTIONARYBUILDER_DEBUG
 	cout << endl << "SORTING INITIAL WORD LIST" << endl;
+	#endif
 	sort(sequenceWords->begin(), sequenceWords->end());
+	#ifdef DICTIONARYBUILDER_DEBUG
 	cout << endl << "SORTED" << endl;
+	#endif
 	
 	//Debugging (just print the first couple of SequenceWords)
 	#ifdef DICTIONARYBUILDER_DEBUG
@@ -238,8 +253,9 @@ int main(int argc, char ** argv)
 	}
 	#endif
 	
+	//Shit output into the specified dictionary file
 	ofstream dict_file;
-	dict_file.open(argv[2]);
+	dict_file.open(argv[2], ios::out | ios::trunc);
 	if(!dict_file.good()) {
 		cerr << "Couldn't open dictionary file for writing." << endl;
 		throw EXCEPTION_FILE_IO;

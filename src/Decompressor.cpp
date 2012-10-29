@@ -12,9 +12,14 @@ Decompressor::Decompressor() {
 	;
 }
 
-char* Decompressor::decompress_file(const string & compressed_file, Dictionary & dict) {
+char* Decompressor::decompress_file(const string & compressed_file, Dictionary & dict) const {
 	ifstream file_input;
 	file_input.open(compressed_file.c_str(), ios::in | ios::binary);
+	
+	if(!file_input.good()) {
+		cerr << "Decompressor could not open input file!" << endl;
+		throw(EXCEPTION_FILE_IO);
+	}
 	
 	int uncompressed_file_bytes;
 	file_input.read((char*)&uncompressed_file_bytes, sizeof(int));
@@ -92,7 +97,14 @@ int main(int argc, char ** argv) {
 	
 	string input_file(argv[2]);
 	
-	cout << engine.decompress_file(input_file, dict);
+	try {
+		char* decompressed_string = engine.decompress_file(input_file, dict);
+		cout << decompressed_string << endl;
+		free(decompressed_string);
+	} catch (int e) {
+		cerr << "Decompressor exiting with error code " << e << "." << endl;
+		return(e);		
+	}
 	
 	return(0);
 }

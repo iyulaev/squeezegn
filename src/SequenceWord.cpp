@@ -2,7 +2,6 @@
 #include "sequenceword.h"
 #include "utility.h"
 
-/** Private function; returns the 2-bit code corresponding to the ACGT character provided */
 uint8_t SequenceWord::charToCode(char ascii_char) const {
 	//Convert input to upper case if necessary
 	if(ascii_char > 0x5A) { ascii_char -= 0x20; }
@@ -35,8 +34,6 @@ uint8_t SequenceWord::charToCode(char ascii_char) const {
 	throw EXCEPTION_UNKNOWN_CODE_CHARACTER;
 }*/
 
-/** Puts a given code datum (2-bit character) into position idx within this SequenceWord's
-data member variable. Used by the constructor to fill this SequenceWord. */
 void SequenceWord::pushDatum(uint8_t datum, int idx) {
 	uint64_t datum_big = (uint64_t) datum;
 	uint64_t DATUM_MASK = 0x3ll;
@@ -49,8 +46,7 @@ void SequenceWord::pushDatum(uint8_t datum, int idx) {
 	data[idx_word] = old_data | ((datum_big&DATUM_MASK) << idx_pos);
 }
 
-/** Return the datum (2-bit sequence) located at index (idx) provided */
-uint8_t SequenceWord::getDatumAt(int idx) {
+uint8_t SequenceWord::getDatumAt(int idx) const {
 	int idx_word = idx / (sizeof(uint64_t)*8/2);
 	int idx_pos = 2 * (idx % (sizeof(uint64_t)*8/2));
 	
@@ -58,8 +54,6 @@ uint8_t SequenceWord::getDatumAt(int idx) {
 	return((uint8_t)((datumWord >> idx_pos) & 0x3ll));
 }
 
-/** Initializes this SequenceWord.data from the provided character string. We assume input_str has length (at least) 
-STR_LEN. This function is used by SequenceWord constructor */
 void SequenceWord::initSW(const char * input_str) {
 	for(int i = 0; i < STR_LEN / 4 / sizeof(uint64_t); i++) {
 		data[i] = 0x0;
@@ -70,19 +64,17 @@ void SequenceWord::initSW(const char * input_str) {
 	}
 }
 
-/** Create a SequenceWord from a given C string
-The C string should have length at least STR_LEN. */
+
 SequenceWord::SequenceWord(const char * input_str) {
 	initSW(input_str);
 }
 
-/** Create a SequenceWord from a given C++ string
-The C++ string should have length at least STR_LEN. */
+
 SequenceWord::SequenceWord(const string input_str) {
 	initSW(input_str.c_str());
 }
 
-/** This is a copy constructor. We create a deep copy of the provided SequenceWord */
+
 SequenceWord::SequenceWord(const SequenceWord& other) {
 	const uint64_t* other_data = other.getData();
 	
@@ -91,9 +83,8 @@ SequenceWord::SequenceWord(const SequenceWord& other) {
 	}
 }
 
-/** Returns an integer representing how many characters (2-bit datums) do not match between this.data and
-other.data. There's some optimization to make this function run as quickly as possible */
-int SequenceWord::calcDiff(SequenceWord other) const {
+
+int SequenceWord::calcDiff(const SequenceWord & other) const {
 	//We assume that unsigned long longs are 64-bits, otherwse the popcount call won't work
 	if(sizeof(unsigned long long) != sizeof(uint64_t)) {
 		#ifdef DEBUG_SEQUENCEWORD
@@ -125,10 +116,7 @@ int SequenceWord::calcDiff(SequenceWord other) const {
 	return(retval);
 }
 
-/** Returns the index of the first datum that isn't the same between this SW and other 
-If there's no difference, return -1
-
-TODO: make this more efficient (hand-manipulation of bits and the like)
+/*TODO: make this more efficient (hand-manipulation of bits and the like)
 */
 int SequenceWord::firstDatumNotSame(const SequenceWord & other) const {
 	const uint64_t* other_data = other.getData();
@@ -159,9 +147,60 @@ int SequenceWord::firstDatumNotSame(const SequenceWord & other) const {
 	return(-1);
 }
 
-/** Compares two SequenceWords by using bit-wise XOR of data member variables. Returns true if there
-are no difference between the two. */
-bool SequenceWord::isEqual(SequenceWord other) const {
+
+vector<uint8_t>* SequenceWord::calcStringDiffs (const SequenceWord & other) const {
+	if(isEqual(other)) { return(NULL); }
+	
+	vector<uint8_t>* retval = new vector<uint8_t>();
+	uint16_t skipped_letters = 0;
+	
+	int i = 0;
+	while(i < STR_LEN) {
+		if(getDatumAt(i) != other.getDatumAt(i)) {
+			#ifdef DICTIONARY_DEBUG_LV1
+			fprintf(stderr, "Determined that datums 0x%02x and 0x%02x were unequal!\n",
+				getDatumAt(i),
+				other.getDatumAt(i));
+			#endif
+		
+			//Skip letter (16 bit sequence) starts with 1'b0
+			if(skipped_letters > 0) {
+				uint16_t skipword = skipped_letters & 0x7FFF;
+				retval->push_back((uint8_t)((skipword >> 8) & 0xFF));
+				retval->push_back((uint8_t) (skipword & 0xFF));
+				skipped_letters = 0;
+			}
+		
+			//Single letter substitution starts with 2'b10
+			if(i > (STR_LEN - 3)) {
+				uint8_t diff = 0x80 | (getDatumAt(i));
+				retval->push_back(diff);
+				i++;
+			//Multi-letter substitution starts with 2'b11
+			} else {
+				uint8_t diff = 0xC0 | ((getDatumAt(i)<<4)|(getDatumAt(i+1)<<2)|(getDatumAt(i+2)));
+				retval->push_back(diff);
+				i+=3;
+			}
+		}
+		
+		else {
+			i++;
+			skipped_letters++;
+		}
+	}
+	
+	if(skipped_letters > 0) {
+		uint16_t skipword = skipped_letters & 0x7FFF;
+		retval->push_back((uint8_t)((skipword >> 8) & 0xFF));
+		retval->push_back((uint8_t) (skipword & 0xFF));
+		skipped_letters = 0;
+	}
+	
+	return(retval);
+}
+
+bool SequenceWord::isEqual(const SequenceWord & other) const {
 	const uint64_t* other_data = other.getData();
 	
 	for(int i = 0; i < (STR_LEN*2) / (sizeof(uint64_t) * 8); i++) {
@@ -171,8 +210,7 @@ bool SequenceWord::isEqual(SequenceWord other) const {
 	return true;
 }
 
-/** Compares two SequenceWords, returns true if string represented by this.data is less than other.data */
-bool SequenceWord::operator<(SequenceWord other) const {
+bool SequenceWord::operator<(const SequenceWord & other) const {
 	const uint64_t* other_data = other.getData();
 
 	for(int i = 0; i < (STR_LEN*2) / (sizeof(uint64_t) * 8); i++) {
@@ -188,8 +226,7 @@ bool SequenceWord::operator<(SequenceWord other) const {
 	return false;
 }
 
-/** Compares two SequenceWords, returns true if string represented by this.data is greater than other.data */
-bool SequenceWord::operator>(SequenceWord other) const {
+bool SequenceWord::operator>(const SequenceWord & other) const {
 	const uint64_t* other_data = other.getData();
 
 	for(int i = 0; i < (STR_LEN*2) / (sizeof(uint64_t) * 8); i++) {
@@ -205,12 +242,10 @@ bool SequenceWord::operator>(SequenceWord other) const {
 	return false;
 }
 
-/** Calls isEqual(other). */
-bool SequenceWord::operator==(SequenceWord other) const {
+bool SequenceWord::operator==(const SequenceWord & other) const {
 	return(isEqual(other));
 }
 
-/** Returns character (ACGT) representation of this.data. Must be given a character buffer of size (at least) STR_LEN. */
 char * SequenceWord::outputStr(char* char_buf) const {
 	char* char_buf_ptr = char_buf;	
 

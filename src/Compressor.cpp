@@ -15,6 +15,10 @@ Compressor::Compressor() {
 	initDataStructures();
 }
 
+Compressor::~Compressor() {
+	destroyDataStructures();
+}
+
 void Compressor::initDataStructures() {
 	nPositions = new vector< pair<int,int> >();
 	stringPositions = new vector< pair<int,int> >();
@@ -27,9 +31,9 @@ void Compressor::destroyDataStructures() {
 	delete diffList;
 }
 
-void Compressor::flushDataStructures(string & ofile_name, int chars_compressed) {
+void Compressor::flushDataStructures(const string & ofile_name, int chars_compressed) {
 	ofstream outfile;
-	outfile.open(ofile_name.c_str(), ios::out | ios::binary);
+	outfile.open(ofile_name.c_str(), ios::out | ios::binary | ios::trunc);
 	
 	if(!outfile.good()) {
 		cerr << "Compressor couldn't open output file " << ofile_name << " for writing." << endl;
@@ -62,15 +66,26 @@ void Compressor::flushDataStructures(string & ofile_name, int chars_compressed) 
 	outfile.close();
 }
 
-void Compressor::clearOutBuffer(string & ofile_name, int ofile_count, int chars_compressed) {
+int Compressor::clearOutBuffer(const string & ofile_name, int ofile_count, int chars_compressed) {
 	//flush internal data structures to file, re-initialize them
 	char file_suffix_buf [5];
 	sprintf(file_suffix_buf, "_%03d", ofile_count); //TODO: should be flexible on the number of allowable chunks
 	string full_ofile_name = ofile_name + string(file_suffix_buf);
 	
-	flushDataStructures(full_ofile_name, chars_compressed);
+	#ifdef DEBUG_COMPRESSOR
+	cerr << "Writing output file: " << full_ofile_name << endl;
+	#endif
+	
+	try {
+		flushDataStructures(full_ofile_name, chars_compressed);
+	} catch (int e) {
+		cerr << "clearOutBuffer() couldn't flush data structures to file!" << endl;
+		return(1);
+	}
 	destroyDataStructures();
 	initDataStructures();
+	
+	return(0);
 }
 
 
@@ -90,15 +105,15 @@ inline void Compressor::skipNChars(int skip_positions) {
 	diffList->push_back(((uint8_t*)&skips)[0]);
 }
 
-void Compressor::replaceNs(vector<pair <int,int> >* nPositions, string* fileString, int file_idx) {
+void Compressor::replaceNs(vector<pair <int,int> >* nPositions, string & fileString, int file_idx) {
 	size_t next_N;
 	int skipped_ns = 0;
 	
 	do {
-		next_N = fileString->find_first_of('N');
+		next_N = fileString.find_first_of('N');
 		
 		if(next_N != string::npos) {
-			string::iterator it_nstart = fileString->begin();
+			string::iterator it_nstart = fileString.begin();
 			it_nstart += next_N;
 			string::iterator it_nend = it_nstart;
 			
@@ -108,14 +123,14 @@ void Compressor::replaceNs(vector<pair <int,int> >* nPositions, string* fileStri
 			nPositions->push_back(make_pair(file_idx + next_N + skipped_ns, n_length));
 			skipped_ns += n_length;
 			
-			fileString->erase(it_nstart, it_nend);
+			fileString.erase(it_nstart, it_nend);
 		}
 	} while(next_N != string::npos);
 }
 
 #define ENABLE_ONESUB_MATCH
 #define ENABLE_NEARRADIUS_MATCH
-int Compressor::compressFileString(Dictionary & dict, string & fileString) {
+int Compressor::compressFileString(const Dictionary & dict, const string & fileString) {
 	int str_idx = 0;
 	while(str_idx < fileString.size()) {
 		//Try to find exact match
@@ -254,9 +269,6 @@ int main ( int argc, char ** argv) {
 	}
 	
 	#ifdef DEBUG_COMPRESSOR
-	#endif
-	
-	#ifdef DEBUG_COMPRESSOR
 	cerr << "Opening input file." << endl;
 	#endif
 	
@@ -267,8 +279,10 @@ int main ( int argc, char ** argv) {
 		//For now let's not worry about replacing Ns
 		//file_idx = engine.replaceNs(&nPositions, &fileString, 0);
 		int chars_compressed = engine.compressFileString(dict, fileString);
-		engine.clearOutBuffer(ofile_name, ofile_count++, chars_compressed);
+		int cob_retval = engine.clearOutBuffer(ofile_name, ofile_count++, chars_compressed);
 		file_idx += chars_compressed;
+		
+		if(cob_retval != 0) break;
 	}
 	
 	file_input.close();

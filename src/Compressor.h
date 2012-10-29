@@ -30,7 +30,7 @@ class Compressor {
 		/** Free data structures */
 		void destroyDataStructures();
 		/** Flush data structures to output file (with output file name provided) */
-		void flushDataStructures(string & ofile_name, int chars_compressed);
+		void flushDataStructures(const string & ofile_name, int chars_compressed);
 		
 		/** Push a single character to diffList */
 		inline void pushSingleCharacter(char c);
@@ -48,17 +48,21 @@ class Compressor {
 	public:
 		/** Creates a new Compressor */
 		Compressor();
+		~Compressor();
 		
 		/** Removes all strings of 'N' characters in fileString, and adds to nPositions the position and length
 			of each extracted 'N' string
 			file_idx simply tells the function where in the UNCOMPRESSED, UNALTERED file fileString is located
 		*/
-		void replaceNs( vector< pair<int,int> >* nPositions, string* fileString, int file_idx);
+		void replaceNs( vector< pair<int,int> >* nPositions, string & fileString, int file_idx);
 		
 		/** Flush the output buffer to file 
 			Takes name of output file, the file # (input "chunk") that we have finished processing, and the uncompressed character
-			count of the data that we flush out. */
-		void clearOutBuffer(string & ofile_name, int ofile_count, int chars_compressed);
+			count of the data that we flush out. 
+			
+			Returns 0 if clearing output buffers was successful.
+			*/
+		int clearOutBuffer(const string & ofile_name, int ofile_count, int chars_compressed);
 		
 		/** Compress a given file string, putting the exact matches (relative to the dictionary) into stringPositions
 			and putting substiutions into diffList. Note that compressDiffList() should probably be run before
@@ -68,7 +72,7 @@ class Compressor {
 			
 			returns the length of the UNCOMPRESSED string that we have compressed
 		*/
-		int compressFileString(Dictionary & dict, string & fileString);
+		int compressFileString(const Dictionary & dict, const string & fileString);
 };
 
 #endif

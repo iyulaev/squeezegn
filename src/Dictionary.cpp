@@ -12,12 +12,16 @@
 
 using namespace std;
 
-Dictionary::Dictionary(string fileName, int n_dict_size) {
+Dictionary::Dictionary(const string & fileName, int n_dict_size) {
 	dictionary_size = n_dict_size;
 	dictionaryList = loadDictionaryFile(fileName);
 }
 
-vector<SequenceWord>* Dictionary::loadDictionaryFile(string fileName) {
+Dictionary::~Dictionary() {
+	if(dictionaryList != NULL) delete dictionaryList;
+}
+
+vector<SequenceWord>* Dictionary::loadDictionaryFile(const string & fileName) {
 	ifstream myfile;
 	vector<SequenceWord>* retval = new vector<SequenceWord>();
 	
@@ -54,11 +58,11 @@ vector<SequenceWord>* Dictionary::loadDictionaryFile(string fileName) {
 	return(retval);
 }
 
-SequenceWord* Dictionary::getWordAt(int idx) {
+SequenceWord* Dictionary::getWordAt(int idx) const {
 	return(new SequenceWord(dictionaryList->at(idx)));
 }
 
-vector<uint8_t>* Dictionary::calcStringDiffs(SequenceWord query, int target_idx) {
+vector<uint8_t>* Dictionary::calcStringDiffs(const SequenceWord & query, int target_idx) const {
 	SequenceWord target = (*dictionaryList)[target_idx];
 	
 	#ifdef DICTIONARY_DEBUG_LV1
@@ -70,59 +74,11 @@ vector<uint8_t>* Dictionary::calcStringDiffs(SequenceWord query, int target_idx)
 	printf("T: %s\n", temp);
 	#endif
 	
-	if(target == query) { return(NULL); }
-	
-	vector<uint8_t>* retval = new vector<uint8_t>();
-	uint16_t skipped_letters = 0;;
-	
-	int i = 0;
-	while(i < STR_LEN) {
-		if(query.getDatumAt(i) != target.getDatumAt(i)) {
-			#ifdef DICTIONARY_DEBUG_LV1
-			fprintf(stderr, "Determined that datums 0x%02x and 0x%02x were unequal!\n",
-				query.getDatumAt(i),
-				target.getDatumAt(i));
-			#endif
-		
-			//Skip letter (16 bit sequence) starts with 1'b0
-			if(skipped_letters > 0) {
-				uint16_t skipword = skipped_letters & 0x7FFF;
-				retval->push_back((uint8_t)((skipword >> 8) & 0xFF));
-				retval->push_back((uint8_t) (skipword & 0xFF));
-				skipped_letters = 0;
-			}
-		
-			//Single letter substitution starts with 2'b10
-			if(i > (STR_LEN - 3)) {
-				uint8_t diff = 0x80 | (query.getDatumAt(i));
-				retval->push_back(diff);
-				i++;
-			//Multi-letter substitution starts with 2'b11
-			} else {
-				uint8_t diff = 0xC0 | ((query.getDatumAt(i)<<4)|(query.getDatumAt(i+1)<<2)|(query.getDatumAt(i+2)));
-				retval->push_back(diff);
-				i+=3;
-			}
-		}
-		
-		else {
-			i++;
-			skipped_letters++;
-		}
-	}
-	
-	if(skipped_letters > 0) {
-		uint16_t skipword = skipped_letters & 0x7FFF;
-		retval->push_back((uint8_t)((skipword >> 8) & 0xFF));
-		retval->push_back((uint8_t) (skipword & 0xFF));
-		skipped_letters = 0;
-	}
-	
-	return(retval);
+	return(query.calcStringDiffs(target));
 }
 
 //#define DEBUG_DICTIONARY_FEM
-int Dictionary::findExactMatch(SequenceWord input) {
+int Dictionary::findExactMatch(const SequenceWord & input) const {
 	auto it_first = dictionaryList->begin();
 	auto it_last = dictionaryList->end();
 
@@ -145,7 +101,7 @@ int Dictionary::findExactMatch(SequenceWord input) {
 }
 
 
-int Dictionary::findFromNearest(SequenceWord input) {
+int Dictionary::findFromNearest(const SequenceWord & input) const {
 	auto it_first = dictionaryList->begin();
 	auto it_last = dictionaryList->end();
 
@@ -177,7 +133,7 @@ int Dictionary::findFromNearest(SequenceWord input) {
 }
 
 
-int Dictionary::findNearMatch(SequenceWord input) {
+int Dictionary::findNearMatch(const SequenceWord & input) const {
 	//change each character in input by 1
 	for(int i = 0; i < STR_LEN; i++) {
 		//there are thre epossible options for each character

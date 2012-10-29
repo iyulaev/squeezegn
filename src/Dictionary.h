@@ -22,14 +22,15 @@ class Dictionary {
 	/** Loads the given dictionaryfile into a vector of SequenceWords. The file had better already be sorted.
 	Return: pointer to a newly-allocated vector of SequenceWords, that represents the loaded dictionary
 	*/
-	std::vector<SequenceWord>* loadDictionaryFile(string fileName);
+	std::vector<SequenceWord>* loadDictionaryFile(const string & fileName);
 	
 	public:	
 	/** Creates a new dictionary from dict file fileName, assumes that the dictionary has size n_dict_size */
-	Dictionary(string fileName, int n_dict_size);
+	Dictionary(const string & fileName, int n_dict_size);
+	~Dictionary();
 	
 	/** Return a copy of the sequenceword at position idx */
-	SequenceWord* getWordAt(int idx);
+	SequenceWord* getWordAt(int idx) const;
 	
 	/** Returns the difference set between the provided SequenceWord and the dictionary SequenceWord at target_idx
 	The return value is the difference list (expressed as a vector of bytes) where  if the byte starts with 1'b0, then the 
@@ -38,18 +39,18 @@ class Dictionary {
 	
 	Parameters: query is the SequenceWord we compare against the dictionary, target_idx is the dictionary position
 	that we are comparing query against*/
-	std::vector<uint8_t>* calcStringDiffs(SequenceWord query, int target_idx);
+	std::vector<uint8_t>* calcStringDiffs(const SequenceWord & query, int target_idx) const;
 	
 	/** Try to find the index of an exact match between the provided SequenceWord and the 
 	currently loaded dictionary. If a match is found, a dictionary index is returned, otherwise we 
 	return (-1). */
-	int findExactMatch(SequenceWord input);
+	int findExactMatch(const SequenceWord & input) const;
 	/** Try to find a match for input within the dictionary, changing at most one symbol in input. This gives (3*STR_LEN) possible
 	matches to check against in the dictionary */
-	int findNearMatch(SequenceWord input);
+	int findNearMatch(const SequenceWord & input) const;
 	/** Find the nearest match from the nearest DICTIONARY_NEAREST_SEARCH_RADIUS words, 
 	centered around the dictionary's lower_bound() of the given SequenceWord input. */
-	int findFromNearest(SequenceWord input);
+	int findFromNearest(const SequenceWord & input) const;
 };
 
 #endif
