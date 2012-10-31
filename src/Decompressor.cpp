@@ -78,21 +78,22 @@ char* Decompressor::decompress_file(const string & compressed_file, Dictionary &
 }
 
 int main(int argc, char ** argv) {
-	if(argc != 3 && argc != 4) {
+	if(argc != 3) {
 		cout << "Invalid number of command line arguments!" << endl;
 		cout << "Should be:" << endl;
 		cout << "(1) Dictionary file" << endl;
 		cout << "(2) Input file" << endl;
-		cout << "(3) Dictionary size (optional)" << endl;
+		
+		return(-1);
 	}
 	
 	string dictFilename(argv[1]);
 	
 	int dict_size;
 	if(argc==4) { dict_size = atoi(argv[3]); }
-	else { dict_size = DICTIONARY_SIZE; }
+	else { dict_size = (DICTIONARY_SIZE<dict_size) ? DICTIONARY_SIZE : dict_size; }
 	
-	Dictionary dict(dictFilename, dict_size);
+	Dictionary dict(dictFilename);
 	Decompressor engine;
 	
 	string input_file(argv[2]);

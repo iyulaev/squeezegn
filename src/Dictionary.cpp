@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <string.h>
 #include <fstream>
@@ -12,9 +13,9 @@
 
 using namespace std;
 
-Dictionary::Dictionary(const string & fileName, int n_dict_size) {
-	dictionary_size = n_dict_size;
+Dictionary::Dictionary(const string & fileName) {
 	dictionaryList = loadDictionaryFile(fileName);
+	dictionary_size = dictionaryList->size();
 }
 
 Dictionary::~Dictionary() {
@@ -24,6 +25,7 @@ Dictionary::~Dictionary() {
 vector<SequenceWord>* Dictionary::loadDictionaryFile(const string & fileName) {
 	ifstream myfile;
 	vector<SequenceWord>* retval = new vector<SequenceWord>();
+	int m_dictionary_size;
 	
 	myfile.open(fileName.c_str());
 	
@@ -37,7 +39,11 @@ vector<SequenceWord>* Dictionary::loadDictionaryFile(const string & fileName) {
 		char filebuf[STR_LEN+1];
 		myfile.getline(filebuf, STR_LEN+1);
 		
-		if(strlen(filebuf) >= STR_LEN) {
+		//First line indicates size of the dictionary
+		if(i == 0) {
+			m_dictionary_size = atoi(filebuf);
+		}
+		else if(strlen(filebuf) >= STR_LEN) {
 			retval->push_back(SequenceWord(filebuf));
 			
 			#ifdef DICTIONARY_DEBUG_LV1
@@ -46,11 +52,13 @@ vector<SequenceWord>* Dictionary::loadDictionaryFile(const string & fileName) {
 			printf("Pushed string to dict: %s\n", temp);
 			#endif
 		}
+		
 		#ifdef DICTIONARY_DEBUG_LV1
 		if(!myfile.good()) {
 			printf("myfile stopped being good after line %d\n", i);
 		}
 		#endif
+		
 		i++;
 	}
 	myfile.close();	

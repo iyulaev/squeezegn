@@ -26,7 +26,7 @@ class Dictionary {
 	
 	public:	
 	/** Creates a new dictionary from dict file fileName, assumes that the dictionary has size n_dict_size */
-	Dictionary(const string & fileName, int n_dict_size);
+	Dictionary(const string & fileName);
 	~Dictionary();
 	
 	/** Return a copy of the sequenceword at position idx */

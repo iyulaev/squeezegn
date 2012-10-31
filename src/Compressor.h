@@ -31,19 +31,16 @@ class Compressor {
 		void destroyDataStructures();
 		/** Flush data structures to output file (with output file name provided) */
 		void flushDataStructures(const string & ofile_name, int chars_compressed);
+		/** Compress the diff list:
+			Any three single-bit substitutions turn into a single three-bit substitution
+			Any two adjacent skip words are combined into a single skip word - (if we don't overflow of course!) 
+		*/
+		void compressDiffs();
 		
 		/** Push a single character to diffList */
 		inline void pushSingleCharacter(char c);
 		/** Push a single skip entry into diffList */
 		inline void skipNChars(int skip_positions);
-		
-		/** Compress the diff list:
-			Any three single-bit substitutions turn into a single three-bit substitution
-			Any two adjacent skip words are combined into a single skip word - (if we don't overflow of course!) 
-			
-			TODO: not yet implemented!
-		*/
-		void compressDiffList(vector<uint8_t>* diffList) {;}
 		
 	public:
 		/** Creates a new Compressor */

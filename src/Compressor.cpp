@@ -10,6 +10,12 @@ long, concatenated string of short reads) with a given dictionary. Typically we 
 #include "SequenceWord.h"
 
 #define DEBUG_COMPRESSOR
+//#define DEBUG_COMPRESSOR_DIFFLIST
+
+
+#ifdef DEBUG_COMPRESSOR_DIFFLIST
+#include <stdio.h>
+#endif
 
 Compressor::Compressor() {
 	initDataStructures();
@@ -72,6 +78,9 @@ int Compressor::clearOutBuffer(const string & ofile_name, int ofile_count, int c
 	sprintf(file_suffix_buf, "_%03d", ofile_count); //TODO: should be flexible on the number of allowable chunks
 	string full_ofile_name = ofile_name + string(file_suffix_buf);
 	
+	//Compress the diff list
+	//compressDiffs();
+	
 	#ifdef DEBUG_COMPRESSOR
 	cerr << "Writing output file: " << full_ofile_name << endl;
 	#endif
@@ -88,6 +97,88 @@ int Compressor::clearOutBuffer(const string & ofile_name, int ofile_count, int c
 	return(0);
 }
 
+void Compressor::compressDiffs() {
+	vector<uint8_t>* new_diffList = new vector< uint8_t >();
+	
+	//If we're within three bytes of the end we can't look ahead three bytes anymore so compression should stop
+	//That's the furthest we might look ahead in the below algorithm
+	auto it = diffList->begin();
+	while(it < diffList->end()-3) {
+		uint8_t read_word = *it;
+		
+		//Case 1: We have three single-characters in a row, compress them to a two charactrer
+		if((read_word & 0xC0) == 0x80) {
+			uint8_t read_word_two = *(it+1);
+			uint8_t read_word_three = *(it+2);
+			
+			if((read_word_two & 0xC0) == 0x80 && (read_word_three & 0xC0) == 0x80) {
+				uint8_t new_diff = 0xC0 | 
+					(read_word_three & 0x3) |
+					((read_word_two<<2) & 0xC) |
+					((read_word<<4) & 0x30);
+					
+				new_diffList->push_back(new_diff);
+				it+=3;
+				
+				#ifdef DEBUG_COMPRESSOR_DIFFLIST
+				printf("Mashed together three single-chars 0x%02x / 0x%02x / 0x%02x into 0x%02x\n",
+						read_word,
+						read_word_two,
+						read_word_three,
+						new_diff);
+				#endif
+			}
+			//No replacement occured - carry on...
+			else {
+				new_diffList->push_back(read_word);
+				it++;
+			}
+		} else if((read_word & 0xC0) == 0x00) { //Case 2: Match two skips in a row
+			uint16_t read_lword = (*it << 8) | (*(it+1));
+			uint8_t read_word_two = *(it+2);
+			uint16_t read_lword_two = (*(it+2) << 8) | (*(it+3));
+			uint16_t max_bit_max = 1 << 13;
+			
+			//Check if the next word is a skip word, and if the sum of this skip and the next one won't overflow
+			//then mash them together
+			if((read_word_two & 0xC0) == 0x00 && 
+				((read_lword & max_bit_max) == 0) && 
+				((read_lword_two & max_bit_max) == 0)) {
+				
+				uint16_t write_lword = read_lword + read_lword_two;
+				new_diffList->push_back((write_lword>>8) & 0xFF);
+				new_diffList->push_back(write_lword & 0xFF);
+				
+				it+=4;
+				
+				#ifdef DEBUG_COMPRESSOR_DIFFLIST
+				printf("Mashed together two skips 0x%04x and 0x%04x into 0x%04x\n",
+					read_lword,
+					read_lword_two,
+					write_lword);
+				#endif
+				
+			} else { //Otherwise just write out the skip
+				new_diffList->push_back(*(it++));
+				new_diffList->push_back(*(it++));
+			}
+		} else if((read_word & 0xC0) == 0xC0){ //Other cases - is a three symbol substitution, just push
+			new_diffList->push_back(read_word);
+			it++;
+		} else {
+			cerr << "ERROR - compressDiffs() got invalid byte " << read_word << endl;
+			it++;
+		}
+	}
+	
+	while(it < diffList->end()) {
+		new_diffList->push_back(*(it++));
+	}
+	
+	delete diffList;
+	diffList = new_diffList;
+}
+
 
 
 inline void Compressor::pushSingleCharacter(char c) {
@@ -101,6 +192,7 @@ inline void Compressor::pushSingleCharacter(char c) {
 
 inline void Compressor::skipNChars(int skip_positions) {
 	uint16_t skips = (uint16_t) skip_positions;
+	
 	diffList->push_back(((uint8_t*)&skips)[1]);
 	diffList->push_back(((uint8_t*)&skips)[0]);
 }
@@ -156,9 +248,14 @@ int Compressor::compressFileString(const Dictionary & dict, const string & fileS
 					int mismatch_datum=queryWord.firstDatumNotSame(*targetWord);
 					delete targetWord;
 					
-					skipNChars(mismatch_datum);
-					pushSingleCharacter(fileString.at(str_idx + mismatch_datum));
-					skipNChars(STR_LEN - mismatch_datum - 1);
+					if(mismatch_datum != -1) {
+						skipNChars(mismatch_datum);
+						pushSingleCharacter(fileString.at(str_idx + mismatch_datum));
+						skipNChars(STR_LEN - mismatch_datum - 1);
+					} else {
+						skipNChars(STR_LEN);
+						cerr << "Should never happen : error 1001" << endl;
+					}
 					
 					str_idx += STR_LEN;
 				}
@@ -251,7 +348,7 @@ int main ( int argc, char ** argv) {
 	cerr << "Initializing dictionary." << endl;
 	#endif
 	string dict_filename(argv[1]);
-	Dictionary dict(dict_filename, DICTIONARY_SIZE);
+	Dictionary dict(dict_filename);
 	
 	//File input
 	ifstream file_input;

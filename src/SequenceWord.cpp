@@ -123,8 +123,8 @@ int SequenceWord::firstDatumNotSame(const SequenceWord & other) const {
 	
 	for(int i = 0; i < (STR_LEN/4)/sizeof(uint64_t); i++) {
 		if(data[i] != other_data[i]) {
-			uint8_t* this_data_bytes = (uint8_t*) data;
-			uint8_t* other_data_bytes = (uint8_t*) other_data;
+			uint8_t* this_data_bytes = (uint8_t*) &data[i];
+			uint8_t* other_data_bytes = (uint8_t*) &other_data[i];
 			
 			for(int j = 0; j < sizeof(uint64_t)/sizeof(uint8_t); j++) {
 				if(this_data_bytes[j] != other_data_bytes[j]) {
@@ -142,6 +142,10 @@ int SequenceWord::firstDatumNotSame(const SequenceWord & other) const {
 				}
 			}
 		}
+	}
+	
+	for(int i = 0; i < (STR_LEN/4)/sizeof(uint64_t); i++) {
+		printf("Compared 0x%ll16x with 0x%ll16x\n", data[i], other_data[i]);
 	}
 	
 	return(-1);

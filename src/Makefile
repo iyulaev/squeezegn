@@ -42,3 +42,9 @@ clean:
 	rm -f *.o
 	rm -f *.exe
 	rm -f *.stackdump
+	rm *000
+
+all: 
+	make dictionarybuilder
+	make compressor
+	make decompressor

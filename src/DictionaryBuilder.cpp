@@ -42,13 +42,14 @@ vector<SequenceWord>* DictionaryBuilder::loadFile(string fileName) {
 	int stat_retval = stat( fileName.c_str(), &filestatus );
 	unsigned int file_bytes = filestatus.st_size;
 	
-	if(file_bytes < STR_LEN) { throw EXCEPTION_FILE_IO; }
+	if(file_bytes < STR_LEN) { 
+		cerr << "DictionaryBuilder was given input file with length less than a single string; aborting." << endl;
+		throw EXCEPTION_FILE_IO; 
+	}
 	if(stat_retval != 0) { 
 		cerr << "Couldn't stat input file " << fileName << endl;
 		throw EXCEPTION_FILE_IO; 
 	}
-	
-	cerr << "file_bytes = " << file_bytes << endl;
 	
 	char * file_buffer = (char*) malloc(file_bytes * sizeof(char));
 	if(file_buffer == NULL) throw EXCEPTION_FILE_IO;
@@ -102,6 +103,7 @@ int main(int argc, char ** argv)
 	}
 	
 	int dict_size = (argc==4) ? atoi(argv[3]) : DICTIONARY_SIZE;
+	dict_size = (dict_size > DICTIONARY_SIZE) ? DICTIONARY_SIZE : dict_size;
 	
 	//http://gcc.gnu.org/onlinedocs/libstdc++/manual/termination.html
 	std::set_terminate(__gnu_cxx::__verbose_terminate_handler);
@@ -260,9 +262,15 @@ int main(int argc, char ** argv)
 		cerr << "Couldn't open dictionary file for writing." << endl;
 		throw EXCEPTION_FILE_IO;
 	}
+	
+	//Output the dictionary size that we're writing
+	char msgbuf[STR_LEN+1];
+	int output_dict_size = (dict_size < dictionary_list.size()) ? dict_size : dictionary_list.size();
+	sprintf(msgbuf, "%d", output_dict_size);
+	dict_file << msgbuf << endl;
+	
 	auto it = dictionary_list.begin();
 	for(int i = 0; i < dict_size && it < dictionary_list.end(); i++) {
-		char msgbuf[STR_LEN+1];
 		(*it++).outputStr(msgbuf);
 		dict_file << msgbuf << endl;
 	}
