@@ -13,7 +13,7 @@ File size when running squeezegene and then ZIP compression afterwards is about 
 
 Input sequences should be given as ASCII files, with the entire genome on a single "line" (i.e. no linebreaks). Valid characters are 'A', 'C', 'G', 'T'. 'N' is not currently valid.
 
-# Dictionary File Structure #
+## Dictionary File Structure ##
 
 The dictionary file is written out in binary. The file is comprised of the following fields, concatenated together:
 
@@ -22,7 +22,7 @@ n SequenceWords, represented in binary form
 
 The SequenceWords in the dictionary file are sorted lexicographically
 
-# Compressed File Structure #
+## Compressed File Structure ##
 
 32-bit int: total size of uncompressed file
 32-bit int: the number of exact string insertions instructions in this file
