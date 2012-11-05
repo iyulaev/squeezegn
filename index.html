@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Squeezegn by iyulaev</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Squeezegn</h1>
+        <p>Tool for compressing genome sequences</p>
+
+        <p class="view"><a href="https://github.com/iyulaev/squeezegn">View the Project on GitHub <small>iyulaev/squeezegn</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/iyulaev/squeezegn/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/iyulaev/squeezegn/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/iyulaev/squeezegn">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>Overview</h1>
+
+<p>Squeezegene is a shared dictionary compression tool for ASCII genome sequences. The goal is to have a reasonably efficient compression algorithm that is orthogonal to common LZW compression tools and is geared towards compression of very long sequences comprised of only four discrete symbols. A side effect is to use a shared dictionary, so that multiple sequences can be compressed using a single shared data file (which does not need to be retransmitted when compressing another similar sequence). LZW-based compression should be used on the output compressed file to reduce file size.</p>
+
+<p>A typical use case is to compress several genetic sequences for similar organisms. Due to the similarity in gene sequences between two individiuals of related (or the same) species, it is likely that a second sequence can be compressed very efficiently using a recipe-like approach where the sequence can be de-compressed by the receiver based on data from a prior gene sequence. This dramatically reduces the amount of data that must be transmitted when uploading a genome to a server, f.ex. when loading a new sequence run onto a cloud-based HPC provider for secondary processing.</p>
+
+<p>Compressed file size when running squeezegene (and then 7Z compression afterwards) is about 2x smaller than 7Z compression alone. This is not a side-effect of the binary format the squeezegene outputs, simply converting the input stream to binary and then compressing does not yield significant improvement over the ASCII file after compression. Compression performance on a Core 2 processor (running only on a single core) is about 100Kbase/second; this needs to be improved since 7z compression runs about 5x faster on the same system. Also presently the DictionaryBuilder chokes on input files larger than a few Mbase for systems with ~2GB of memory. Memory use should scale with input file size.</p>
+
+<h1>Input Requirements</h1>
+
+<p>Input sequences should be given as ASCII files, with the entire genome on a single "line" (i.e. no linebreaks). Valid characters are 'A', 'C', 'G', 'T'. 'N' is not currently valid.</p>
+
+<h2>Dictionary File Structure</h2>
+
+<p>The dictionary file is written out in binary. The file is comprised of the following fields, concatenated together:</p>
+
+<p>32-bit int: the number of entries in this dictionary file (n)<br>
+n SequenceWords, represented in binary form</p>
+
+<p>The SequenceWords in the dictionary file are sorted lexicographically</p>
+
+<h2>Compressed File Structure</h2>
+
+<p>32-bit int: total size of uncompressed file
+32-bit int: the number of exact string insertions instructions in this file
+String insertion instructions (32-bit int pairs)
+    Each instruction specified a pair of integers: the dictionary string index to insert, and the (uncompressed) file location at which it should be inserted. The output file is initialized to 'A's and then the string insertions are performed
+Skip/replace instructions
+    These instructions are executed after the string instructions have been finished. We start our pointer at the beginning of the output file and execute the skip/replace instructions on it Each byte in the skip/replace area decodes into one of three possible instructions:
+    1. If the byte begins with 1'b0, the subsequence 7 bits of this byte are concatenated with the 8 bits of the next byte to form a 15-bit unsigned integer. This indicates how many characters we should skip ahead
+    2. If the byte begins with 2'b10, the lower-most two bits of this byte should be decoded into a single character and written into the current position.
+    3. If the byte begins with 2'b11, the lower-most 6 bits of this byte should be decoded into a sequence of three characters (lsb -&gt; 3rd character) and written into the current position as well as the two subsequence positions.</p>
+
+<h1>Program Components</h1>
+
+<p>There are three components to squeezegene:</p>
+
+<h2>DictionaryBuilder</h2>
+
+<p>Used to build a dictionary for the compressor and decompressor tools. Must be run with three arguments:   </p>
+
+<p>(1) The short read file (ASCII, no line breaks) for the genome from which to generate a dictionary<br>
+(2) The name of the output (binary) dictionary file; will be overwritten<br>
+(3) (optional) dictionary size to use. For benchmarking on a 1Mbase file a 10K dictionary size works well.  </p>
+
+<p>DictionaryBuilder will output a binary file with the dictionary strings stored in it. This file is used by the downstream tools to compress and decompress ASCII gene sequences.  </p>
+
+<h2>Compressor</h2>
+
+<p>Compressor uses a dictionary file (generated by DictionaryBuilder) and an ASCII genome file to create a compressed genome file. The command-line arguments that compressor takes are:  </p>
+
+<p>(1) Dictionary file to use.<br>
+(2) Genome string to compress.<br>
+(3) Output file name.  </p>
+
+<h2>Decompressor</h2>
+
+<p>Decompressor takes a dictionary file and an binary compressed genome file to re-create the original ASCII genome. Takes just two arguments:  </p>
+
+<p>(1) Dictionary file to use.<br>
+(2) Genome file to de-compress.  </p>
+
+<h1>TESTS</h1>
+
+<p>A rudimentary regression test suite has been written for squeezegene. Each component can be tested independently. The procedure for testing the components is given in the README.md file.</p>
+
+<h1>License</h1>
+
+<p>All code copyright Ivan Yulaev, 2012. (<a href="mailto:ivan@yulaev.com">ivan@yulaev.com</a>)
+Squeezegene is distributed under GNU GPL. License text can be found in README.md.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/iyulaev">iyulaev</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
