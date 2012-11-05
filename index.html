@@ -1,33 +1,36 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
+
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Squeezegn by iyulaev</title>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Squeezegn : Tool for compressing genome sequences" />
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Squeezegn</title>
   </head>
+
   <body>
-    <div class="wrapper">
-      <header>
-        <h1>Squeezegn</h1>
-        <p>Tool for compressing genome sequences</p>
 
-        <p class="view"><a href="https://github.com/iyulaev/squeezegn">View the Project on GitHub <small>iyulaev/squeezegn</small></a></p>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/iyulaev/squeezegn">View on GitHub</a>
 
+          <h1 id="project_title">Squeezegn</h1>
+          <h2 id="project_tagline">Tool for compressing genome sequences</h2>
 
-        <ul>
-          <li><a href="https://github.com/iyulaev/squeezegn/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/iyulaev/squeezegn/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/iyulaev/squeezegn">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/iyulaev/squeezegn/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/iyulaev/squeezegn/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
         <h1>Overview</h1>
 
 <p>Squeezegene is a shared dictionary compression tool for ASCII genome sequences. The goal is to have a reasonably efficient compression algorithm that is orthogonal to common LZW compression tools and is geared towards compression of very long sequences comprised of only four discrete symbols. A side effect is to use a shared dictionary, so that multiple sequences can be compressed using a single shared data file (which does not need to be retransmitted when compressing another similar sequence). LZW-based compression should be used on the output compressed file to reduce file size.</p>
@@ -51,15 +54,15 @@ n SequenceWords, represented in binary form</p>
 
 <h2>Compressed File Structure</h2>
 
-<p>32-bit int: total size of uncompressed file
-32-bit int: the number of exact string insertions instructions in this file
-String insertion instructions (32-bit int pairs)
-    Each instruction specified a pair of integers: the dictionary string index to insert, and the (uncompressed) file location at which it should be inserted. The output file is initialized to 'A's and then the string insertions are performed
-Skip/replace instructions
-    These instructions are executed after the string instructions have been finished. We start our pointer at the beginning of the output file and execute the skip/replace instructions on it Each byte in the skip/replace area decodes into one of three possible instructions:
-    1. If the byte begins with 1'b0, the subsequence 7 bits of this byte are concatenated with the 8 bits of the next byte to form a 15-bit unsigned integer. This indicates how many characters we should skip ahead
-    2. If the byte begins with 2'b10, the lower-most two bits of this byte should be decoded into a single character and written into the current position.
-    3. If the byte begins with 2'b11, the lower-most 6 bits of this byte should be decoded into a sequence of three characters (lsb -&gt; 3rd character) and written into the current position as well as the two subsequence positions.</p>
+<p>32-bit int: total size of uncompressed file<br>
+32-bit int: the number of exact string insertions instructions in this file<br>
+String insertion instructions (32-bit int pairs)<br>
+    Each instruction specified a pair of integers: the dictionary string index to insert, and the (uncompressed) file location at which it should be inserted. The output file is initialized to 'A's and then the string insertions are performed<br>
+Skip/replace instructions<br>
+    These instructions are executed after the string instructions have been finished. We start our pointer at the beginning of the output file and execute the skip/replace instructions on it Each byte in the skip/replace area decodes into one of three possible instructions:<br>
+    1. If the byte begins with 1'b0, the subsequence 7 bits of this byte are concatenated with the 8 bits of the next byte to form a 15-bit unsigned integer. This indicates how many characters we should skip ahead<br>
+    2. If the byte begins with 2'b10, the lower-most two bits of this byte should be decoded into a single character and written into the current position.<br>
+    3. If the byte begins with 2'b11, the lower-most 6 bits of this byte should be decoded into a sequence of three characters (lsb -&gt; 3rd character) and written into the current position as well as the two subsequence positions.  </p>
 
 <h1>Program Components</h1>
 
@@ -99,12 +102,17 @@ Skip/replace instructions
 <p>All code copyright Ivan Yulaev, 2012. (<a href="mailto:ivan@yulaev.com">ivan@yulaev.com</a>)
 Squeezegene is distributed under GNU GPL. License text can be found in README.md.</p>
       </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/iyulaev">iyulaev</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Squeezegn maintained by <a href="https://github.com/iyulaev">iyulaev</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
-    <script src="javascripts/scale.fix.js"></script>
+
     
+
   </body>
 </html>
