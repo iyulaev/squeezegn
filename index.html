@@ -51,6 +51,8 @@ n SequenceWords, represented in binary form</p>
 
 <h2>Compressed File Structure</h2>
 
+<p>The following fields are concatenated together to form the compressed file. This is the output of compressor.exe and the input to decompressor.exe.</p>
+
 <p>32-bit int: total size of uncompressed file<br>
 32-bit int: the number of exact string insertions instructions in this file<br>
 String insertion instructions (32-bit int pairs)<br>
