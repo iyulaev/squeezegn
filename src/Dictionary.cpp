@@ -27,7 +27,7 @@ vector<SequenceWord>* Dictionary::loadDictionaryFile(const string & fileName) {
 	vector<SequenceWord>* retval = new vector<SequenceWord>();
 	int m_dictionary_size;
 	
-	myfile.open(fileName.c_str());
+	myfile.open(fileName.c_str(), ios::in | ios::binary);
 	
 	if(!myfile.good()) {
 		cerr << "Dictionary file could not be opened!" << endl;
@@ -35,16 +35,18 @@ vector<SequenceWord>* Dictionary::loadDictionaryFile(const string & fileName) {
 	}
 	
 	int i = 0;
-	while(myfile.good()) {
-		char filebuf[STR_LEN+1];
-		myfile.getline(filebuf, STR_LEN+1);
-		
+	while(myfile.good()) {		
 		//First line indicates size of the dictionary
 		if(i == 0) {
-			m_dictionary_size = atoi(filebuf);
-		}
-		else if(strlen(filebuf) >= STR_LEN) {
-			retval->push_back(SequenceWord(filebuf));
+			myfile.read((char*) &m_dictionary_size, sizeof(m_dictionary_size));
+		} else {
+			uint64_t readWord [STR_LEN_WORDS];
+			
+			for(int i = 0; i < STR_LEN_WORDS; i++) {
+				myfile.read((char*) &(readWord[i]), sizeof(uint64_t));
+			}
+			
+			retval->push_back(SequenceWord(readWord));
 			
 			#ifdef DICTIONARY_DEBUG_LV1
 			char temp[STR_LEN+1];

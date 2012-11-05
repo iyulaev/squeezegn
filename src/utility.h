@@ -7,7 +7,7 @@ Written I. Yulaev 2012-10-04
 #ifndef SQUEEZEGENE_UTILITY
 #define SQUEEZEGENE_UTILITY
 
-#include "sequenceword.h"
+#include "SequenceWord.h"
 
 using namespace std;
 
@@ -24,7 +24,7 @@ inline std::size_t sequenceWordHash(const SequenceWord & sw) {
 	std::size_t retval = 0;
 	
 	for(int i = 0; i < ((STR_LEN/4) * sizeof(uint64_t) / sizeof(std::size_t)); i++) {
-		//retval ^= ((std::size_t *) rawdata)[i];
+		retval ^= ((std::size_t *) rawdata)[i];
 	}
 	
 	return(retval);

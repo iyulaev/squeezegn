@@ -9,7 +9,7 @@ long, concatenated string of short reads) with a given dictionary. Typically we 
 #include "utility.h"
 #include "SequenceWord.h"
 
-#define DEBUG_COMPRESSOR
+//#define DEBUG_COMPRESSOR
 //#define DEBUG_COMPRESSOR_DIFFLIST
 
 
@@ -79,7 +79,7 @@ int Compressor::clearOutBuffer(const string & ofile_name, int ofile_count, int c
 	string full_ofile_name = ofile_name + string(file_suffix_buf);
 	
 	//Compress the diff list
-	//compressDiffs();
+	compressDiffs();
 	
 	#ifdef DEBUG_COMPRESSOR
 	cerr << "Writing output file: " << full_ofile_name << endl;
@@ -220,7 +220,7 @@ void Compressor::replaceNs(vector<pair <int,int> >* nPositions, string & fileStr
 	} while(next_N != string::npos);
 }
 
-#define ENABLE_ONESUB_MATCH
+//#define ENABLE_ONESUB_MATCH
 #define ENABLE_NEARRADIUS_MATCH
 int Compressor::compressFileString(const Dictionary & dict, const string & fileString) {
 	int str_idx = 0;
@@ -235,67 +235,66 @@ int Compressor::compressFileString(const Dictionary & dict, const string & fileS
 				str_idx += STR_LEN;
 			}
 			
-			//Try to find match for single-character substitution
-			#ifdef ENABLE_ONESUB_MATCH
+			//Try to find match from nearest "search radius"
+			#ifdef ENABLE_NEARRADIUS_MATCH
 			else {
-				int near_match_idx = dict.findNearMatch(SequenceWord(fileString.substr(str_idx, str_idx + STR_LEN)));
-				
-				if(near_match_idx >= 0) { 
-					stringPositions->push_back( make_pair(str_idx, near_match_idx) ); 
-					
-					SequenceWord queryWord(fileString.substr(str_idx, STR_LEN));
+				SequenceWord queryWord(fileString.substr(str_idx, STR_LEN));
+				int near_match_idx = dict.findFromNearest(queryWord);
+				int diffs_w_near_match = -1;
+				if(near_match_idx >= 0) {
 					SequenceWord* targetWord = dict.getWordAt(near_match_idx);
-					int mismatch_datum=queryWord.firstDatumNotSame(*targetWord);
-					delete targetWord;
+					diffs_w_near_match = queryWord.calcDiff(*targetWord);
+				}
+				
+				if(diffs_w_near_match >= 0 && diffs_w_near_match <= COMPRESOR_MAX_DIFF_COUNT) {
 					
-					if(mismatch_datum != -1) {
-						skipNChars(mismatch_datum);
-						pushSingleCharacter(fileString.at(str_idx + mismatch_datum));
-						skipNChars(STR_LEN - mismatch_datum - 1);
-					} else {
-						skipNChars(STR_LEN);
-						cerr << "Should never happen : error 1001" << endl;
+					//make compressorcout << "Compressor doing nearest radius insert." << endl;
+					
+					stringPositions->push_back( make_pair(str_idx, near_match_idx) );
+
+					char msgbuf[256];
+					SequenceWord* targetWord = dict.getWordAt(near_match_idx);
+					targetWord->outputStr(msgbuf);
+					// printf("Diffing strings %s and ", msgbuf);
+					// cout << fileString.substr(str_idx, STR_LEN) << endl;
+					vector<uint8_t>* dictDiffList = dict.calcStringDiffs(
+						queryWord, 
+						near_match_idx);
+						
+					for(auto it = dictDiffList->begin(); it < dictDiffList->end(); it++) {
+						diffList->push_back(*it);
+						//printf("Pushing diff list item 0x%02x\n", *it);
 					}
 					
+					delete dictDiffList;
 					str_idx += STR_LEN;
 				}
 				
-				//Try to find match from nearest "search radius"
-				#define MAX_DIFF_COUNT 3
-				#ifdef ENABLE_NEARRADIUS_MATCH
-				else { 
-					SequenceWord queryWord(fileString.substr(str_idx, STR_LEN));
-					
-					int near_match_idx = dict.findFromNearest(queryWord);
-					int diffs_w_near_match = -1;
-					if(near_match_idx >= 0) {
-						SequenceWord* targetWord = dict.getWordAt(near_match_idx);
-						diffs_w_near_match = queryWord.calcDiff(*targetWord);
-					}
-					
-					if(diffs_w_near_match >= 0 && diffs_w_near_match <= MAX_DIFF_COUNT) {
+				//Try to find match for single-character substitution
+				#ifdef ENABLE_ONESUB_MATCH
+				else {
+					int near_match_idx = dict.findNearMatch(SequenceWord(fileString.substr(str_idx, str_idx + STR_LEN)));
+				
+					if(near_match_idx >= 0) { 
+						stringPositions->push_back( make_pair(str_idx, near_match_idx) ); 
 						
-						//make compressorcout << "Compressor doing nearest radius insert." << endl;
-						
-						stringPositions->push_back( make_pair(str_idx, near_match_idx) );
-
-						char msgbuf[256];
+						SequenceWord queryWord(fileString.substr(str_idx, STR_LEN));
 						SequenceWord* targetWord = dict.getWordAt(near_match_idx);
-						targetWord->outputStr(msgbuf);
-						// printf("Diffing strings %s and ", msgbuf);
-						// cout << fileString.substr(str_idx, STR_LEN) << endl;
-						vector<uint8_t>* dictDiffList = dict.calcStringDiffs(
-							queryWord, 
-							near_match_idx);
-							
-						for(auto it = dictDiffList->begin(); it < dictDiffList->end(); it++) {
-							diffList->push_back(*it);
-							//printf("Pushing diff list item 0x%02x\n", *it);
+						int mismatch_datum=queryWord.firstDatumNotSame(*targetWord);
+						delete targetWord;
+						
+						if(mismatch_datum != -1) {
+							skipNChars(mismatch_datum);
+							pushSingleCharacter(fileString.at(str_idx + mismatch_datum));
+							skipNChars(STR_LEN - mismatch_datum - 1);
+						} else {
+							skipNChars(STR_LEN);
+							cerr << "Should never happen : error 1001" << endl;
 						}
 						
-						delete dictDiffList;
 						str_idx += STR_LEN;
 					}
+					
 					
 					else { 
 						// printf("Pushing single character %c to output pos %d\n",

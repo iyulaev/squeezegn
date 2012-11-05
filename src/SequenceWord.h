@@ -30,10 +30,14 @@ class SequenceWord {
 	private:
 		//This is the ONLY data stored for a sequence word; it is a packed, 2-bit per symbol
 		//representation of a sequence (A/C/G/T) word
-		uint64_t data [STR_LEN / 4 / sizeof(uint64_t)];
+		uint64_t data [STR_LEN_WORDS];
 		
 		/** Private function; returns the 2-bit code corresponding to the ACGT character provided */
 		uint8_t charToCode(char ascii_char) const;
+		
+		/** Initializes this SequenceWord.data from the provided binary string. We assume input_str has length (at least) 
+		STR_LEN_WORDS. This function is used by SequenceWord constructor */
+		void initSW(const uint64_t * input_str);
 		
 		/** Initializes this SequenceWord.data from the provided character string. We assume input_str has length (at least) 
 		STR_LEN. This function is used by SequenceWord constructor */
@@ -41,6 +45,10 @@ class SequenceWord {
 		
 	public:
 		SequenceWord() {;}
+		
+		/** Create a SequenceWord from a uint64_t pointer
+		we assume that the length of the array pointed to by the pointers is STR_LEN_WORDS */
+		SequenceWord(const uint64_t* input_word);
 		
 		/** Create a SequenceWord from a given C string
 		The C string should have length at least STR_LEN. */

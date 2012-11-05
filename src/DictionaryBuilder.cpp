@@ -95,10 +95,10 @@ vector<SequenceWord>* DictionaryBuilder::loadFile(string fileName) {
 int main(int argc, char ** argv)
 {
 	if(argc != 3 && argc != 4) {
-		cout << "dictionarybuilder takes two or three arguments, the file name for short read file \
-			to read from, and the dictionary file that we are to generate." << endl;
-		cout << "optionally a third argument may be given, indicating the dictionary size to use." \
-			<< endl;
+		cout << "dictionarybuilder takes two or three arguments" << endl;
+		cout << "the file name for short read file to read from" << endl;
+		cout << "the dictionary file that we are to generate." << endl;
+		cout << "a third argument may be given, indicating the dictionary size to use." << endl;
 		return -1;
 	}
 	
@@ -193,7 +193,6 @@ int main(int argc, char ** argv)
 	
 	//Now, after we've sorted the input data, we calculate the differences within DICTIONARYBUILDER_DIFF_RADIUS
 	//We'll push everything into a new unordered map and keep track of the minimum diff count for a given SequenceWord
-	#define DICTIONARYBUILDER_DIFF_RADIUS 50
 	unordered_map<SequenceWord, int, function<size_t( const SequenceWord & sw )>> min_diff_map(1000, sequenceWordHash);
 	int strings_processed = 0;
 	
@@ -224,7 +223,7 @@ int main(int argc, char ** argv)
 		
 		strings_processed++;
 		if(strings_processed % 100000 == 0) {
-			cout << "Calculated diffs for " << strings_processed << " strings!" << endl;
+			//cout << "Calculated diffs for " << strings_processed << " strings!" << endl;
 		}
 	}
 	
@@ -257,22 +256,22 @@ int main(int argc, char ** argv)
 	
 	//Shit output into the specified dictionary file
 	ofstream dict_file;
-	dict_file.open(argv[2], ios::out | ios::trunc);
+	dict_file.open(argv[2], ios::out | ios::trunc | ios::binary);
 	if(!dict_file.good()) {
 		cerr << "Couldn't open dictionary file for writing." << endl;
 		throw EXCEPTION_FILE_IO;
 	}
 	
 	//Output the dictionary size that we're writing
-	char msgbuf[STR_LEN+1];
 	int output_dict_size = (dict_size < dictionary_list.size()) ? dict_size : dictionary_list.size();
-	sprintf(msgbuf, "%d", output_dict_size);
-	dict_file << msgbuf << endl;
+	dict_file.write((char*)&output_dict_size, sizeof(output_dict_size));
 	
 	auto it = dictionary_list.begin();
 	for(int i = 0; i < dict_size && it < dictionary_list.end(); i++) {
-		(*it++).outputStr(msgbuf);
-		dict_file << msgbuf << endl;
+		const uint64_t* data = (*it++).getData();
+		for(int j = 0; j < STR_LEN_WORDS; j++) {
+			dict_file.write((char*) data++, sizeof(uint64_t));
+		}
 	}
 	dict_file.close();
 	

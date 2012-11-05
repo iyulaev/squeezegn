@@ -1,29 +1,66 @@
-=-=-= Overview =-=-=
+# Overview #
 
-Squeezegene is a shared dictionary compression tool. The goal is to have a reasonably efficient compression algorithm that is orthogonal to common LZW compression tools and is geared towards compression of very long sequences comprised of only four discrete symbols. A side effect is to use a shared dictionary, so that multiple sequences can be compressed using a single shared data file (which does not need to be retransmitted when compressing another similar sequence). 
+Squeezegene is a shared dictionary compression tool. The goal is to have a reasonably efficient compression algorithm that is orthogonal to common LZW compression tools and is geared towards compression of very long sequences comprised of only four discrete symbols. A side effect is to use a shared dictionary, so that multiple sequences can be compressed using a single shared data file (which does not need to be retransmitted when compressing another similar sequence). LZW-based compression should be used on the output compressed file to reduce file size.
 
 A typical use case is to compress several genetic sequences for similar organisms. Due to the similarity in gene sequences between two individiuals of related (or the same) species, it is likely that a second sequence can be compressed very efficiently using a recipe-like approach where the sequence can be de-compressed by the receiver based on data from a prior gene sequence. This dramatically reduces the amount of data that must be transmitted when uploading a genome to a server, f.ex. when loading a new sequence run onto a cloud-based HPC provider for secondary processing.
 
+File size when running squeezegene and then ZIP compression afterwards is about 2x smaller than ZIP compression alone. This is not a side-effect of the binary format the squeezegene outputs, simply converting the input stream to binary and then compressing does not yield significant improvement over the ASCII file after compression. Compression performance on a Core 2 processor (single-core) is about 100Kbase/second; this needs to be improved since 7z compression runs about 10x faster on that system. Also presently the DictionaryBuilder chokes on input files larger than a few Mbase for systems with ~2GB of memory. Memory use should scale with input file size.
 
-=-=-= Program Components =-=-=
+
+
+
+# Input Requirements #
+
+Input sequences should be given as ASCII files, with the entire genome on a single "line" (i.e. no linebreaks). Valid characters are 'A', 'C', 'G', 'T'. 'N' is not currently valid.
+
+# Dictionary File Structure #
+
+The dictionary file is written out in binary. The file is comprised of the following fields, concatenated together:
+
+32-bit int: the numbre of entries in this dictionary file (n)
+n SequenceWords, represented in binary form
+
+The SequenceWords in the dictionary file are sorted lexicographically
+
+# Compressed File Structure #
+
+32-bit int: total size of uncompressed file
+32-bit int: the number of exact string insertions instructions in this file
+String insertion instructions (32-bit int pairs)
+	Each instruction specified a pair of integers: the dictionary string index to insert, and the (uncompressed) file location at which it should be inserted. The output file is initialized to 'A's and then the string insertions are performed
+Skip/replace instructions
+	These instructions are executed after the string instructions have been finished. We start our pointer at the beginning of the output file and execute the skip/replace instructions on it Each byte in the skip/replace area decodes into one of three possible instructions:
+	1. If the byte begins with 1'b0, the subsequence 7 bits of this byte are concatenated with the 8 bits of the next byte to form a 15-bit unsigned integer. This indicates how many characters we should skip ahead
+	2. If the byte begins with 2'b10, the lower-most two bits of this byte should be decoded into a single character and written into the current position.
+	3. If the byte begins with 2'b11, the lower-most 6 bits of this byte should be decoded into a sequence of three characters (lsb -> 3rd character) and written into the current position as well as the two subsequence positions.
+
+
+# Program Components #
 
 There are three components to squeezegene:
 
-1. DictionaryBuilder - 
+1. DictionaryBuilder - Used to build a dictionary for the compressor and decompressor tools. Must be run with three arguments: 
+	(1) The short read file (ASCII, no line breaks) for the genome from which to generate a dictionary
+	(2) The name of the output (binary) dictionary file; will be overwritten
+	(3) (optional) dictionary size to use. For benchmarking on a 1Mbase file a 10K dictionary size works well.
+DictionaryBuilder will output a binary file with the dictionary strings stored in it. This file is used by the downstream tools to compress and decompress ASCII gene sequences.
+
+2. Compressor - Compressor uses a dictionary file (generated by DictionaryBuilder) and an ASCII genome file to create a compressed genome file. The command-line arguments that compressor takes are:
+	(1) Dictionary file to use.
+	(2) Genome string to compress.
+	(3) Output file name.
+
+3. Decompressor - Decompressor takes a dictionary file and an binary compressed genome file to re-create the original ASCII genome. Takes just two arguments:
+	(1) Dictionary file to use.
+	(2) Genome file to de-compress.
 
 
 
-2. Compressor - 
-
-
-
-3. Decompressor - 
-
-
-
-=-=-= TESTS =-=-=
+# TESTS #
 
 A rudimentary regression test suite has been written for squeezegene. Each component can be tested independently. The procedure for testing the components is given below:
+
+NOTE: COMPRESSOR AND DECOMPRESSOR TEST ARE PRESENTLY DEPRECATED. IT IS RECOMMENDED THAT INTERGRATION TESTS BE USED INSTEAD, SINCE THOSE TEST BOTH COMPRESSION AND DECOMPRESSION.
 
 SequenceWord:
 	1. Run "make sequenceword"
@@ -40,10 +77,15 @@ DictionaryBuilder:
 
 Compressor
 	1. make compressor
+	2. "cd ../tests/Integration"
+	3. "sh tests.sh"
+	
+Integration
+	1. make all
 	2. "cd ../tests/Compressor"
 	3. "sh tests.sh"
 
-=-=-= License =-=-=
+# License #
 All code copyright Ivan Yulaev, 2012. (ivan@yulaev.com)
 Squeezegene is distributed under GNU GPL. License text below.
 

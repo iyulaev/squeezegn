@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "sequenceword.h"
+#include "SequenceWord.h"
 #include "utility.h"
 
 uint8_t SequenceWord::charToCode(char ascii_char) const {
@@ -54,8 +54,15 @@ uint8_t SequenceWord::getDatumAt(int idx) const {
 	return((uint8_t)((datumWord >> idx_pos) & 0x3ll));
 }
 
+void SequenceWord::initSW(const uint64_t * input_word) {
+	for(int i = 0; i < STR_LEN_WORDS; i++) {
+		data[i] = 0x0;
+		data[i] = input_word[i];
+	}
+}
+
 void SequenceWord::initSW(const char * input_str) {
-	for(int i = 0; i < STR_LEN / 4 / sizeof(uint64_t); i++) {
+	for(int i = 0; i < STR_LEN_WORDS; i++) {
 		data[i] = 0x0;
 	}
 	
@@ -64,6 +71,9 @@ void SequenceWord::initSW(const char * input_str) {
 	}
 }
 
+SequenceWord::SequenceWord(const uint64_t * input_word) {
+	initSW(input_word);
+}
 
 SequenceWord::SequenceWord(const char * input_str) {
 	initSW(input_str);
@@ -144,9 +154,11 @@ int SequenceWord::firstDatumNotSame(const SequenceWord & other) const {
 		}
 	}
 	
+	#ifdef DEBUG_SEQUENCEWORD
 	for(int i = 0; i < (STR_LEN/4)/sizeof(uint64_t); i++) {
-		printf("Compared 0x%ll16x with 0x%ll16x\n", data[i], other_data[i]);
+		printf("Compared 0x%016llx with 0x%016llx\n", data[i], other_data[i]);
 	}
+	#endif
 	
 	return(-1);
 }
