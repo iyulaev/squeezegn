@@ -1,10 +1,10 @@
 # Overview #
+Squeezegene is a shared dictionary compression tool for ASCII genome sequences. The goal is to have a reasonably efficient compression algorithm that is orthogonal to common LZW compression tools and is geared towards compression of very long sequences comprised of only four discrete symbols. A side effect is to use a shared dictionary, so that multiple sequences can be compressed using a single shared data file (which does not need to be retransmitted when compressing another similar sequence). LZW-based compression should be used on the output compressed file to reduce file size.
 
-Squeezegene is a shared dictionary compression tool. The goal is to have a reasonably efficient compression algorithm that is orthogonal to common LZW compression tools and is geared towards compression of very long sequences comprised of only four discrete symbols. A side effect is to use a shared dictionary, so that multiple sequences can be compressed using a single shared data file (which does not need to be retransmitted when compressing another similar sequence). LZW-based compression should be used on the output compressed file to reduce file size.
 
 A typical use case is to compress several genetic sequences for similar organisms. Due to the similarity in gene sequences between two individiuals of related (or the same) species, it is likely that a second sequence can be compressed very efficiently using a recipe-like approach where the sequence can be de-compressed by the receiver based on data from a prior gene sequence. This dramatically reduces the amount of data that must be transmitted when uploading a genome to a server, f.ex. when loading a new sequence run onto a cloud-based HPC provider for secondary processing.
 
-File size when running squeezegene and then ZIP compression afterwards is about 2x smaller than ZIP compression alone. This is not a side-effect of the binary format the squeezegene outputs, simply converting the input stream to binary and then compressing does not yield significant improvement over the ASCII file after compression. Compression performance on a Core 2 processor (single-core) is about 100Kbase/second; this needs to be improved since 7z compression runs about 10x faster on that system. Also presently the DictionaryBuilder chokes on input files larger than a few Mbase for systems with ~2GB of memory. Memory use should scale with input file size.
+File size when running squeezegene and then ZIP compression afterwards is about 2x smaller than ZIP compression alone. This is not a side-effect of the binary format the squeezegene outputs, simply converting the input stream to binary and then compressing does not yield significant improvement over the ASCII file after compression. Compression performance on a Core 2 processor (running only on a single core) is about 100Kbase/second; this needs to be improved since 7z compression runs about 5x faster on the same system. Also presently the DictionaryBuilder chokes on input files larger than a few Mbase for systems with ~2GB of memory. Memory use should scale with input file size.
 
 
 
@@ -17,7 +17,7 @@ Input sequences should be given as ASCII files, with the entire genome on a sing
 
 The dictionary file is written out in binary. The file is comprised of the following fields, concatenated together:
 
-32-bit int: the number of entries in this dictionary file (n)
+32-bit int: the number of entries in this dictionary file (n)  
 n SequenceWords, represented in binary form
 
 The SequenceWords in the dictionary file are sorted lexicographically
@@ -39,12 +39,14 @@ Skip/replace instructions
 
 There are three components to squeezegene:
 
-## DictionaryBuilder ## 
+## DictionaryBuilder ##
 
 Used to build a dictionary for the compressor and decompressor tools. Must be run with three arguments:   
+  
 	(1) The short read file (ASCII, no line breaks) for the genome from which to generate a dictionary  
 	(2) The name of the output (binary) dictionary file; will be overwritten  
 	(3) (optional) dictionary size to use. For benchmarking on a 1Mbase file a 10K dictionary size works well.  
+  
 DictionaryBuilder will output a binary file with the dictionary strings stored in it. This file is used by the downstream tools to compress and decompress ASCII gene sequences.  
 
 ## Compressor ##
