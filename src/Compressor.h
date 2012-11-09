@@ -1,3 +1,6 @@
+/** This class defines the top level of the compressor program. Compiled to an executable, 
+this class can compress a genome file per the instructions in the readme */
+
 #ifndef SQUEEZEGENE_COMPRESSOR
 #define SQUEEZEGENE_COMPRESSOR
 
