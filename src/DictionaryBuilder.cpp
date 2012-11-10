@@ -1,7 +1,6 @@
 /** DictionaryBuilder is used to build a dictionary for the Compressor and Extractor tools, 
-part of the squeezegene DNA sequence compression utility 
-
-TODO: modify the output so that we output binary, 2 bits per base Dictionary (1/4 the size)
+part of the squeezegene DNA sequence compression utility. See the README for a high-level
+description of how a dictionary gets built.
 */
 
 #include <iostream>
@@ -34,8 +33,8 @@ class DictionaryBuilder {
 #define REMOVE_NS
 //#define DICTIONARYBUILDER_DEBUG
 /** Loads the given file (fileName) into memory, and then generates a set of vector of SequenceWords, one starting at 
-every offset (modulo string length) of the file.  So, returned[i] will contain all strings starting at offsets i, modulo 
-STR_LEN.
+every offset (modulo string length) of the file.  So, returned[i] will contain all strings starting at offsets of 
+(n*STR_LEN + i).
 */
 vector<vector<SequenceWord>*>* DictionaryBuilder::loadFile(string fileName) {
 	//Determine the length of the file
@@ -201,8 +200,8 @@ int main(int argc, char ** argv)
 		num_duplicates << " duplicates!" << endl << endl;
 	#endif
 	
-	cout << "Got here one." << endl;
-	
+	//For each of the word lists from the file (at different offsets) we'll calculate the cumulative difference
+	//of the words and pick the lowest-scoring word list to use as our dictionary
 	vector<pair<SequenceWord, int>> diff_list [STR_LEN];
 	for(int i = 0; i < STR_LEN; i++) {
 		//Now, after we've sorted the input data, we calculate the differences within DICTIONARYBUILDER_DIFF_RADIUS
@@ -210,6 +209,7 @@ int main(int argc, char ** argv)
 		unordered_map<SequenceWord, int, function<size_t( const SequenceWord & sw )>> min_diff_map(1000, sequenceWordHash);
 		int strings_processed = 0;
 		
+		//This loop performs the scoring of the word list
 		for(auto it = sequenceWords->at(i)->begin(); it < sequenceWords->at(i)->end(); it++) {
 			int diff = 0;
 			
@@ -247,9 +247,7 @@ int main(int argc, char ** argv)
 		sort(diff_list[i].begin(), diff_list[i].end(), sort_pairs_by_second<SequenceWord>);
 	}
 	
-	cout << "Got here two." << endl;
-	
-	//Now, grab the top dict_size winners
+	//Now, grab the top dict_size winners from the winning word list
 	vector<SequenceWord> dictionary_list [STR_LEN];
 	int cumulative_diff;
 	int winning_diff = ((1<<30)-1) << 1;

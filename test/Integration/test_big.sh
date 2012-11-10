@@ -4,7 +4,7 @@
 TEST=1
 echo "BIGTEST #$TEST building dictionary"
 START_NS=$(date +%s%N)
-../../src/dictionarybuilder.exe genome6_a.txt dict6.txt 5000
+../../src/dictionarybuilder.exe genome6_a.txt dict6.txt 1000
 END_NS=$(date +%s%N)
 DELTA_MS=$((($END_NS - $START_NS) / 1000000))
 echo "Dict Builder took $DELTA_MS to run"

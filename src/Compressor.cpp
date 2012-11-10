@@ -220,7 +220,7 @@ void Compressor::replaceNs(vector<pair <int,int> >* nPositions, string & fileStr
 	} while(next_N != string::npos);
 }
 
-//#define ENABLE_ONESUB_MATCH
+#define ENABLE_ONESUB_MATCH
 #define ENABLE_NEARRADIUS_MATCH
 int Compressor::compressFileString(const Dictionary & dict, const string & fileString) {
 	int str_idx = 0;
