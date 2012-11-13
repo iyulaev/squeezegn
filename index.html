@@ -36,7 +36,9 @@
 
 <p>A typical use case is to compress several genetic sequences for similar organisms. Due to the similarity in gene sequences between two individuals of related (or the same) species, it is likely that a second sequence can be compressed very efficiently using a recipe-like approach where the sequence can be de-compressed by the receiver based on data from a prior gene sequence. This dramatically reduces the amount of data that must be transmitted when uploading a genome to a server, f.ex. when loading a new sequence run onto a cloud-based HPC provider for secondary processing.</p>
 
-<p>Compressed file size when running squeezegene (and then 7Z compression afterwards) is about 2x smaller than 7Z compression alone. This is not a side-effect of the binary format the squeezegene outputs, simply converting the input stream to binary and then compressing does not yield significant improvement over the ASCII file after compression. Compression performance on a Core 2 processor (running only on a single core) is about 100Kbase/second; this needs to be improved since 7z compression runs about 5x faster on the same system. Also presently the DictionaryBuilder chokes on input files larger than a few Mbase for systems with ~2GB of memory. Memory use should scale with input file size.</p>
+<p>Compressed file size when running squeezegene (and then 7Z compression afterwards) is about 10x smaller than 7Z compression alone, when run on a data set with ~0.5% noise relative to the set used to generate the dictionary. This is not a side-effect of the binary format the squeezegene outputs, simply converting the input stream to binary and then compressing does not yield significant improvement over the ASCII file after compression. Compression performance on a Core 2 processor (running only on a single core) is about 100Kbase/second; this needs to be improved since 7z compression runs about 10x faster on the same system. Also presently the DictionaryBuilder chokes on input files larger than a few Mbase for systems with ~2GB of memory. Memory use should scale with input file size.</p>
+
+<p><img src="https://raw.github.com/iyulaev/squeezegn/master/density_substitution_perf.png" alt="Performance Results"></p>
 
 <h1>Input Requirements</h1>
 
@@ -102,6 +104,10 @@ Skip/replace instructions<br>
 
 <p>All code copyright Ivan Yulaev, 2012. (<a href="mailto:ivan@yulaev.com">ivan@yulaev.com</a>)
 Squeezegene is distributed under GNU GPL. License text can be found in README.md.</p>
+
+<h1>About the Author</h1>
+
+<p>Ivan is a hardware engineer specializing in circuit-board level digital design. For more information see <a href="http://www.linkedin.com/pub/ivan-yulaev/33/163/742/">my LinkedIn profile</a>.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/iyulaev">iyulaev</a></p>
