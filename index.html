@@ -28,7 +28,11 @@
         </ul>
       </header>
       <section>
-        <h1>Overview</h1>
+        <h1>Abstract</h1>
+
+<p>Next-generation DNA sequencing techniques allow for extraction of massive data sets from a given DNA sample, and cloud-based HPC providers have eased access to the large-scale computation resources required to perform analysis on the data. However, due to the high local entropy of the data sets existing compression techniques fail to achieve high compression ratios on the sequence data. Storage and transmission of these datasets has thus become a challenge. We develop an order-insensitive delta-diff compression tool that deflates a genome sequence by generating instructions for recreation via look-ups and substitutions relative to a reference dictionary. The algorithm generates a dictionary from a reference sequence by breaking the sequence into words of a given length and choosing the word list with the most near-repetitions from the entire sequence. The input is similarly broken into words and near-matches are found in the dictionary by sorting the dictionary, locating the lexicographically-nearest word, and searching for the smallest difference count relative to the input string within a given radius. SSE4 bit manipulation instructions are used to speed the calculation of differences between the input and dictionary strings. The output encoding enumerates the dictionary matches plus substitutions that occur due to slight mismatches. For input sequences with a 0.5% density of substitutions relative to the dictionary-generating source, we achieve compression 10x better than ZIP compression. Full source code written in C++11 is provided.</p>
+
+<h1>Description of Project</h1>
 
 <p>Squeezegene is a shared dictionary compression tool for ASCII genome sequences. The goal is to develop a method of compressing gene sequences (especially sequence strings given as output from a sequencing machine) that takes advantage of the prevalence of similar strings within a given genome or sequencing run. Reducing the size of a compressed genome reduces the burden of transferring the genome data, f.ex. when uploading a gene sequencer output file to a cloud computing environment for alignment and analysis.</p>
 
@@ -36,13 +40,21 @@
 
 <p>A typical use case is to compress several genetic sequences for similar organisms. Due to the similarity in gene sequences between two individuals of related (or the same) species, it is likely that a second sequence can be compressed very efficiently using a recipe-like approach where the sequence can be de-compressed by the receiver based on data from a prior gene sequence. This dramatically reduces the amount of data that must be transmitted when uploading a genome to a server, f.ex. when loading a new sequence run onto a cloud-based HPC provider for secondary processing.</p>
 
-<p>Compressed file size when running squeezegene (and then 7Z compression afterwards) is about 10x smaller than 7Z compression alone, when run on a data set with ~0.5% noise relative to the set used to generate the dictionary. This is not a side-effect of the binary format the squeezegene outputs, simply converting the input stream to binary and then compressing does not yield significant improvement over the ASCII file after compression. Compression performance on a Core 2 processor (running only on a single core) is about 100Kbase/second; this needs to be improved since 7z compression runs about 10x faster on the same system. Also presently the DictionaryBuilder chokes on input files larger than a few Mbase for systems with ~2GB of memory. Memory use should scale with input file size.</p>
+<p>Compressed file size when running squeezegene (and then ZIP compression afterwards) is about 10x smaller than ZIP compression alone, when run on a data set with ~0.5% noise relative to the set used to generate the dictionary. This is not a side-effect of the binary format the squeezegene outputs, simply converting the input stream to binary and then compressing does not yield significant improvement over the ASCII file after compression. Compression performance on a Core 2 processor (running only on a single core) is about 100Kbase/second; this needs to be improved since ZIP compression runs about 10x faster on the same system. Also presently the DictionaryBuilder chokes on input files larger than a few Mbase for systems with ~2GB of memory. Memory use should scale with input file size.</p>
+
+<p>The below graph demonstrates the compression efficiency of squeezegene+ZIP, relative to ZIP, for sequence data with a given amount of substitutions. We see a ~10x improvement over ZIP with up to 0.7% noise. As noise increases the number of dictionary near-matches the compression tool finds decreases and so compression efficiency falls dramatically.</p>
 
 <p><img src="https://raw.github.com/iyulaev/squeezegn/master/density_substitution_perf.png" alt="Performance Results"></p>
 
 <h1>Input Requirements</h1>
 
 <p>Input sequences should be given as ASCII files, with the entire genome on a single "line" (i.e. no line breaks). Valid characters are 'A', 'C', 'G', 'T'. 'N' is not currently valid.</p>
+
+<h2>Example Input</h2>
+
+<p>Example input sequences can be found under the test/Integration directory; the tests.sh and test_big.sh scripts are used to perform dictionary generation, compression, and decompression, and to compare the decompressed output with the original source input. The perl script flatten.pl takes the <a href="http://www.ncbi.nlm.nih.gov/genome">NCBI</a>-sourced genome file and removes line breaks. The scramble.pl script performs a similar function, except can insert substitutions every given number of lines to simulate noise being inserted into the sequence data.</p>
+
+<p>The performance data was derived from the test/Integration/silenenoctifloramitochondrionchromosome1 and 2 sequences. flatten.pl was used to flatten a genome, and then scramble was used to generate a similar sequence with some substitutions included.</p>
 
 <h2>Dictionary File Structure</h2>
 
@@ -107,7 +119,7 @@ Squeezegene is distributed under GNU GPL. License text can be found in README.md
 
 <h1>About the Author</h1>
 
-<p>Ivan is a hardware engineer specializing in circuit-board level digital design. For more information see <a href="http://www.linkedin.com/pub/ivan-yulaev/33/163/742/">my LinkedIn profile</a>.</p>
+<p>Ivan is a hardware engineer specializing in circuit-board level digital design. For more information about me see <a href="http://www.linkedin.com/pub/ivan-yulaev/33/163/742/">my LinkedIn profile</a>.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/iyulaev">iyulaev</a></p>
