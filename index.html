@@ -50,6 +50,12 @@
 
 <p><img src="https://raw.github.com/iyulaev/squeezegn/master/density_substitution_perf.png" alt="Performance Results"></p>
 
+<h1>30 seconds to running</h1>
+
+<p>Go to src/, type <code>make all</code>. If it fails you might have to edit the Makefile line <code>sseinstructions = sse4.2</code>, try <code>sseinstructions = sse2</code>.</p>
+
+<p>Once executables have been built, go to test/Integration/ and run <code>sh test_big.sh</code>. This will generate a dictionary from <code>genome6_a.txt</code>, and compress both <code>genome6_a.txt</code> and <code>genome6_b.txt</code> using this dictionary.</p>
+
 <h1>Input Requirements</h1>
 
 <p>Input sequences should be given as ASCII files, with the entire genome on a single "line" (i.e. no line breaks). Valid characters are 'A', 'C', 'G', 'T'. 'N' is not currently valid.</p>
