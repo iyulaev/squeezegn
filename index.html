@@ -1,34 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Squeezegn by iyulaev</title>
-
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <title>Squeezegn by iyulaev</title>
   </head>
+
   <body>
-    <div class="wrapper">
-      <header>
-        <h1>Squeezegn</h1>
-        <p>Tool for compressing genome sequences</p>
+    <div id="container">
+      <div class="inner">
 
-        <p class="view"><a href="https://github.com/iyulaev/squeezegn">View the Project on GitHub <small>iyulaev/squeezegn</small></a></p>
+        <header>
+          <h1>Squeezegn</h1>
+          <h2>Tool for compressing genome sequences</h2>
+        </header>
 
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/iyulaev/squeezegn/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/iyulaev/squeezegn/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/iyulaev/squeezegn" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
 
-        <ul>
-          <li><a href="https://github.com/iyulaev/squeezegn/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/iyulaev/squeezegn/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/iyulaev/squeezegn">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
-        <h1>Abstract</h1>
+        <hr>
+
+        <section id="main_content">
+          <h1>Abstract</h1>
 
 <p>Next-generation DNA sequencing techniques allow for extraction of massive data sets from a given DNA sample, and cloud-based HPC providers have eased access to the large-scale computation resources required to perform analysis on the data. However, due to the high local entropy of the data sets existing compression techniques fail to achieve high compression ratios on the sequence data. Storage and transmission of these data sets has thus become a challenge. </p>
 
@@ -41,6 +44,8 @@
 <p>Squeezegene is a shared dictionary compression tool for ASCII genome sequences. The goal is to develop a method of compressing gene sequences (especially sequence strings given as output from a sequencing machine) that takes advantage of the prevalence of similar strings within a given genome or sequencing run. Reducing the size of a compressed genome reduces the burden of transferring the genome data, f.ex. when uploading a gene sequencer output file to a cloud computing environment for alignment and analysis.</p>
 
 <p>To this end we try to implement a reasonably efficient compression algorithm that is orthogonal to common LZW compression tools and is geared towards compression of very long sequences comprised of only four discrete symbols. A side effect is to use a shared dictionary, so that multiple sequences can be compressed using a single shared data file (which does not need to be retransmitted when compressing another similar sequence). LZW-based compression should be used on the output compressed file to reduce file size.</p>
+
+<p><img src="https://raw.github.com/iyulaev/squeezegn/master/algorithm_drawing.png" alt="(Schematic Illustration of Compression/Decompression Tool Function)"><em>Schematic Illustration of Compression/Decompression Tool Function</em></p>
 
 <p>A typical use case is to compress several genetic sequences for similar organisms. Due to the similarity in gene sequences between two individuals of related (or the same) species, it is likely that a second sequence can be compressed very efficiently using a recipe-like approach where the sequence can be de-compressed by the receiver based on data from a prior gene sequence. This dramatically reduces the amount of data that must be transmitted when uploading a genome to a server, f.ex. when loading a new sequence run onto a cloud-based HPC provider for secondary processing.</p>
 
@@ -132,13 +137,15 @@ Squeezegene is distributed under GNU GPL. License text can be found in README.md
 <h1>About the Author</h1>
 
 <p>Ivan is a hardware engineer specializing in circuit-board level digital design. For more information about me see <a href="http://www.linkedin.com/pub/ivan-yulaev/33/163/742/">my LinkedIn profile</a>.</p>
-      </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/iyulaev">iyulaev</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
-      </footer>
+        </section>
+
+        <footer>
+          Squeezegn is maintained by <a href="https://github.com/iyulaev">iyulaev</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
     </div>
-    <script src="javascripts/scale.fix.js"></script>
-    
   </body>
 </html>
